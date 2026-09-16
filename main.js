@@ -1,7 +1,7 @@
-// main.js — VERSI DEMO (localStorage, tanpa Firebase)
+// main.js — Modern UI Version (localStorage)
 
 // ============================================================
-// DATA HELPER (localStorage)
+// DATABASE HELPER (localStorage)
 // ============================================================
 const DB = {
     get(key) {
@@ -11,7 +11,6 @@ const DB = {
         localStorage.setItem(key, JSON.stringify(val));
     },
     init() {
-        // Seed data awal kalau belum ada
         if (!localStorage.getItem("users")) {
             this.set("users", [
                 { id: 1, nama: "Admin Wahana", username: "admin", password: "admin123", role: "admin" },
@@ -20,10 +19,10 @@ const DB = {
         }
         if (!localStorage.getItem("wahana")) {
             this.set("wahana", [
-                { id: 1, nama_wahana: "ATV", harga: 50000, status: "aktif" },
-                { id: 2, nama_wahana: "Kelinci", harga: 10000, status: "aktif" },
-                { id: 3, nama_wahana: "Kuda", harga: 25000, status: "aktif" },
-                { id: 4, nama_wahana: "Paintball", harga: 75000, status: "aktif" }
+                { id: 1, nama_wahana: "ATV", harga: 50000, status: "aktif", emoji: "🏍️" },
+                { id: 2, nama_wahana: "Kelinci", harga: 10000, status: "aktif", emoji: "🐰" },
+                { id: 3, nama_wahana: "Kuda", harga: 25000, status: "aktif", emoji: "🐴" },
+                { id: 4, nama_wahana: "Paintball", harga: 75000, status: "aktif", emoji: "🎯" }
             ]);
         }
         if (!localStorage.getItem("transaksi")) this.set("transaksi", []);
@@ -41,11 +40,25 @@ const DB = {
 };
 DB.init();
 
+// Emoji otomatis berdasarkan nama
+const EMOJI_MAP = {
+    "atv": "🏍️", "kelinci": "🐰", "kuda": "🐴", "paintball": "🎯",
+    "perahu": "⛵", "sepeda": "🚴", "panah": "🏹", "ayunan": "🎠",
+    "kolam": "🏊", "mobil": "🚗", "motor": "🏍️", "kereta": "🚂"
+};
+function getEmoji(nama) {
+    const n = (nama || "").toLowerCase();
+    for (const k in EMOJI_MAP) {
+        if (n.includes(k)) return EMOJI_MAP[k];
+    }
+    return "🎪";
+}
+
 // ============================================================
 // STATE
 // ============================================================
 let currentUser = null;
-let cart = {};         // { id: { id, nama, harga, jumlah } }
+let cart = {};
 let hapusTarget = { type: null, id: null };
 
 // ============================================================
@@ -62,6 +75,7 @@ const loginError = $("loginError");
 const loginErrorMsg = $("loginErrorMsg");
 const userNama = $("userNama");
 const userRole = $("userRole");
+const userAvatar = $("userAvatar");
 const btnLogout = $("btnLogout");
 
 const tbodyWahana = $("tbodyWahana");
@@ -86,6 +100,8 @@ const cartTotal = $("cartTotal");
 const cartKembalian = $("cartKembalian");
 const inputBayar = $("inputBayar");
 const btnSimpanTransaksi = $("btnSimpanTransaksi");
+const badgeJumlahItem = $("badgeJumlahItem");
+const badgeJumlahWahana = $("badgeJumlahWahana");
 
 const filterDari = $("filterDari");
 const filterSampai = $("filterSampai");
@@ -127,8 +143,11 @@ function generateKode() {
 function formatTanggal(iso) {
     if (!iso) return "-";
     const d = new Date(iso);
-    return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" }) +
+    return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) +
         " " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+}
+function getInitials(nama) {
+    return (nama || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
 
 // ============================================================
@@ -136,12 +155,16 @@ function formatTanggal(iso) {
 // ============================================================
 formLogin.addEventListener("submit", (e) => {
     e.preventDefault();
-    formLogin.classList.add("was-validated");
     loginError.classList.add("d-none");
-    if (!formLogin.checkValidity()) return;
 
     const username = loginUsername.value.trim();
     const password = loginPassword.value;
+
+    if (!username || !password) {
+        loginErrorMsg.textContent = "Username dan password wajib diisi!";
+        loginError.classList.remove("d-none");
+        return;
+    }
 
     const users = DB.get("users");
     const user = users.find(u => u.username === username);
@@ -160,7 +183,7 @@ formLogin.addEventListener("submit", (e) => {
     currentUser = user;
     sessionStorage.setItem("kasirUser", JSON.stringify(currentUser));
     loginSuccess();
-    showToast(`<i class="bi bi-check-circle me-1"></i> Selamat datang, ${escapeHtml(user.nama)}!`, "success");
+    showToast(`<i class="bi bi-check-circle-fill me-1"></i> Selamat datang, ${escapeHtml(user.nama)}!`, "success");
 });
 
 function loginSuccess() {
@@ -168,16 +191,16 @@ function loginSuccess() {
     appPage.classList.remove("d-none");
     userNama.textContent = currentUser.nama;
     userRole.textContent = currentUser.role;
+    userAvatar.textContent = getInitials(currentUser.nama);
 
     // Sembunyikan menu Wahana untuk kasir
-    document.querySelectorAll('.navbar-nav .nav-link[data-page="wahana"]')
-        .forEach(a => a.style.display = currentUser.role === "admin" ? "" : "none");
+    document.querySelectorAll(".nav-wahana-link")
+        .forEach(el => el.style.display = currentUser.role === "admin" ? "" : "none");
 
     navigateTo("dashboard");
     muatSemuaData();
 }
 
-// Auto login
 const savedUser = sessionStorage.getItem("kasirUser");
 if (savedUser) {
     try {
@@ -197,7 +220,6 @@ btnLogout.addEventListener("click", () => {
     appPage.classList.add("d-none");
     loginPage.classList.remove("d-none");
     formLogin.reset();
-    formLogin.classList.remove("was-validated");
     loginError.classList.add("d-none");
     showToast("<i class='bi bi-box-arrow-right me-1'></i> Anda telah logout.", "info");
 });
@@ -219,7 +241,14 @@ function navigateTo(page) {
 document.querySelectorAll(".navbar-nav .nav-link").forEach(a => {
     a.addEventListener("click", (e) => {
         e.preventDefault();
-        if (a.dataset.page) navigateTo(a.dataset.page);
+        if (a.dataset.page) {
+            navigateTo(a.dataset.page);
+            // Tutup menu mobile setelah klik
+            const navMenu = $("navMenu");
+            if (navMenu.classList.contains("show")) {
+                bootstrap.Collapse.getInstance(navMenu)?.hide();
+            }
+        }
     });
 });
 document.querySelectorAll(".btn-goto").forEach(btn => {
@@ -242,16 +271,21 @@ function renderWahana() {
     list.forEach((w, i) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${i + 1}</td>
-            <td><strong>${escapeHtml(w.nama_wahana)}</strong></td>
-            <td>${rupiah(w.harga)}</td>
-            <td><span class="badge bg-${w.status === 'aktif' ? 'success' : 'secondary'}">${w.status}</span></td>
+            <td><strong>${i + 1}</strong></td>
+            <td>
+                <div style="display:flex;align-items:center;gap:.6rem;">
+                    <span style="font-size:1.5rem;">${w.emoji || getEmoji(w.nama_wahana)}</span>
+                    <span style="font-weight:700;">${escapeHtml(w.nama_wahana)}</span>
+                </div>
+            </td>
+            <td style="font-weight:700;color:var(--primary);">${rupiah(w.harga)}</td>
+            <td><span class="badge-status ${w.status}">${w.status}</span></td>
             <td class="text-center">
-                <button class="btn btn-warning btn-sm me-1 btn-edit-wahana" data-id="${w.id}">
-                    <i class="bi bi-pencil"></i>
+                <button class="btn-action edit me-1 btn-edit-wahana" data-id="${w.id}" title="Edit">
+                    <i class="bi bi-pencil-fill"></i>
                 </button>
-                <button class="btn btn-danger btn-sm btn-hapus-wahana" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}">
-                    <i class="bi bi-trash"></i>
+                <button class="btn-action delete btn-hapus-wahana" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}" title="Hapus">
+                    <i class="bi bi-trash-fill"></i>
                 </button>
             </td>
         `;
@@ -273,12 +307,11 @@ function renderWahana() {
 // ============================================================
 function bukaModalWahana(id = null) {
     formWahana.reset();
-    formWahana.classList.remove("was-validated");
     wahanaId.value = "";
 
     if (id) {
-        modalWahanaTitle.innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Wahana';
-        btnSimpanWahana.textContent = "Perbarui";
+        modalWahanaTitle.innerHTML = '<i class="bi bi-pencil-fill"></i> Edit Wahana';
+        btnSimpanWahana.innerHTML = '<i class="bi bi-check-lg"></i> Perbarui';
         const list = DB.get("wahana");
         const w = list.find(x => x.id === id);
         if (w) {
@@ -288,8 +321,8 @@ function bukaModalWahana(id = null) {
             wahanaStatus.value = w.status;
         }
     } else {
-        modalWahanaTitle.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Tambah Wahana';
-        btnSimpanWahana.textContent = "Simpan";
+        modalWahanaTitle.innerHTML = '<i class="bi bi-plus-circle-fill"></i> Tambah Wahana';
+        btnSimpanWahana.innerHTML = '<i class="bi bi-check-lg"></i> Simpan';
     }
     new bootstrap.Modal($("modalWahana")).show();
 }
@@ -298,25 +331,31 @@ btnTambahWahana.addEventListener("click", () => bukaModalWahana(null));
 
 formWahana.addEventListener("submit", (e) => {
     e.preventDefault();
-    formWahana.classList.add("was-validated");
-    if (!formWahana.checkValidity()) return;
-
     const id = wahanaId.value ? Number(wahanaId.value) : null;
+    const nama = wahanaNama.value.trim();
+    const harga = parseFloat(wahanaHarga.value) || 0;
+
+    if (!nama || harga <= 0) {
+        showToast("Semua field wajib diisi dengan benar!", "warning");
+        return;
+    }
+
     const data = {
-        nama_wahana: wahanaNama.value.trim(),
-        harga: parseFloat(wahanaHarga.value) || 0,
-        status: wahanaStatus.value
+        nama_wahana: nama,
+        harga: harga,
+        status: wahanaStatus.value,
+        emoji: getEmoji(nama)
     };
 
     const list = DB.get("wahana");
     if (id) {
         const idx = list.findIndex(x => x.id === id);
         if (idx >= 0) list[idx] = { ...list[idx], ...data };
-        showToast('<i class="bi bi-check-circle me-1"></i> Wahana berhasil diperbarui!', "success");
+        showToast('<i class="bi bi-check-circle-fill me-1"></i> Wahana diperbarui!', "success");
     } else {
         const newId = DB.nextId("wahana");
         list.push({ id: newId, ...data });
-        showToast('<i class="bi bi-check-circle me-1"></i> Wahana berhasil ditambahkan!', "success");
+        showToast('<i class="bi bi-check-circle-fill me-1"></i> Wahana ditambahkan!', "success");
     }
     DB.set("wahana", list);
 
@@ -331,9 +370,9 @@ formWahana.addEventListener("submit", (e) => {
 function konfirmasiHapus(type, id, nama) {
     hapusTarget = { type, id };
     if (type === "wahana") {
-        hapusPesan.innerHTML = `Yakin ingin menghapus wahana <strong>${escapeHtml(nama)}</strong>?`;
+        hapusPesan.innerHTML = `Yakin ingin menghapus wahana <strong>${escapeHtml(nama)}</strong>?<br><small class="text-muted">Tindakan ini tidak dapat dibatalkan.</small>`;
     } else if (type === "transaksi") {
-        hapusPesan.innerHTML = `Yakin ingin menghapus transaksi <strong>${escapeHtml(nama)}</strong>?`;
+        hapusPesan.innerHTML = `Yakin ingin menghapus transaksi <strong>${escapeHtml(nama)}</strong>?<br><small class="text-muted">Tindakan ini tidak dapat dibatalkan.</small>`;
     }
     modalHapus.show();
 }
@@ -342,7 +381,6 @@ btnKonfirmasiHapus.addEventListener("click", () => {
     if (!hapusTarget.id) return;
 
     if (hapusTarget.type === "wahana") {
-        // Cek apakah wahana dipakai di transaksi
         const detail = DB.get("detail_transaksi");
         const dipakai = detail.some(d => d.wahana_id === hapusTarget.id);
         if (dipakai) {
@@ -353,20 +391,15 @@ btnKonfirmasiHapus.addEventListener("click", () => {
         let list = DB.get("wahana");
         list = list.filter(w => w.id !== hapusTarget.id);
         DB.set("wahana", list);
-        showToast('<i class="bi bi-trash me-1"></i> Wahana berhasil dihapus!', "success");
+        showToast('<i class="bi bi-trash-fill me-1"></i> Wahana dihapus!', "success");
         renderWahana();
         updateStats();
     } else if (hapusTarget.type === "transaksi") {
-        // Hapus detail dulu, lalu transaksi
-        let detail = DB.get("detail_transaksi");
-        detail = detail.filter(d => d.transaksi_id !== hapusTarget.id);
+        let detail = DB.get("detail_transaksi").filter(d => d.transaksi_id !== hapusTarget.id);
         DB.set("detail_transaksi", detail);
-
-        let trx = DB.get("transaksi");
-        trx = trx.filter(t => t.id !== hapusTarget.id);
+        let trx = DB.get("transaksi").filter(t => t.id !== hapusTarget.id);
         DB.set("transaksi", trx);
-
-        showToast('<i class="bi bi-trash me-1"></i> Transaksi berhasil dihapus!', "success");
+        showToast('<i class="bi bi-trash-fill me-1"></i> Transaksi dihapus!', "success");
         muatLaporan();
         updateStats();
     }
@@ -381,6 +414,7 @@ btnKonfirmasiHapus.addEventListener("click", () => {
 function renderKasirGrid() {
     const list = DB.get("wahana").filter(w => w.status === "aktif");
     wahanaGrid.innerHTML = "";
+    badgeJumlahWahana.textContent = `${list.length} tersedia`;
 
     if (list.length === 0) {
         emptyWahanaKasir.classList.remove("d-none");
@@ -389,19 +423,20 @@ function renderKasirGrid() {
     emptyWahanaKasir.classList.add("d-none");
 
     list.forEach(w => {
-        const col = document.createElement("div");
-        col.className = "col-6 col-md-4";
-        col.innerHTML = `
-            <div class="card-wahana" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}" data-harga="${w.harga}">
-                <i class="bi bi-ticket-perforated"></i>
-                <div class="nama">${escapeHtml(w.nama_wahana)}</div>
-                <div class="harga">${rupiah(w.harga)}</div>
-            </div>
+        const div = document.createElement("div");
+        div.className = "wahana-item";
+        div.dataset.id = w.id;
+        div.dataset.nama = w.nama_wahana;
+        div.dataset.harga = w.harga;
+        div.innerHTML = `
+            <span class="wahana-emoji">${w.emoji || getEmoji(w.nama_wahana)}</span>
+            <div class="wahana-name">${escapeHtml(w.nama_wahana)}</div>
+            <div class="wahana-price">${rupiah(w.harga)}</div>
         `;
-        col.querySelector(".card-wahana").addEventListener("click", function () {
-            tambahItem(Number(this.dataset.id), this.dataset.nama, parseFloat(this.dataset.harga));
+        div.addEventListener("click", () => {
+            tambahItem(w.id, w.nama_wahana, w.harga);
         });
-        wahanaGrid.appendChild(col);
+        wahanaGrid.appendChild(div);
     });
 }
 
@@ -409,6 +444,7 @@ function tambahItem(id, nama, harga) {
     if (cart[id]) cart[id].jumlah++;
     else cart[id] = { id, nama, harga, jumlah: 1 };
     renderCart();
+    showToast(`<i class="bi bi-plus-circle-fill me-1"></i> ${escapeHtml(nama)} ditambahkan`, "success");
 }
 function kurangiItem(id) {
     if (!cart[id]) return;
@@ -428,8 +464,14 @@ function hitungTotalCart() {
 
 function renderCart() {
     const keys = Object.keys(cart);
+    badgeJumlahItem.textContent = `${keys.length} item`;
+
     if (keys.length === 0) {
-        cartList.innerHTML = '<p class="text-muted text-center py-3">Belum ada item dipilih</p>';
+        cartList.innerHTML = `
+            <div class="cart-empty">
+                <i class="bi bi-cart-x"></i>
+                <p>Keranjang masih kosong<br><small>Klik wahana untuk menambahkan</small></p>
+            </div>`;
         cartTotal.textContent = "Rp 0";
         cartKembalian.textContent = "Rp 0";
         return;
@@ -440,17 +482,17 @@ function renderCart() {
         const it = cart[k];
         const sub = it.harga * it.jumlah;
         html += `
-            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                <div>
-                    <div class="fw-bold">${escapeHtml(it.nama)}</div>
-                    <small class="text-muted">${rupiah(it.harga)} × ${it.jumlah}</small>
+            <div class="cart-item">
+                <div class="item-info">
+                    <div class="item-name">${escapeHtml(it.nama)}</div>
+                    <div class="item-detail">${rupiah(it.harga)} × ${it.jumlah}</div>
                 </div>
-                <div class="text-end">
-                    <div class="fw-bold text-primary">${rupiah(sub)}</div>
-                    <div class="mt-1">
-                        <button class="btn btn-sm btn-outline-danger py-0 px-2 btn-kurang" data-id="${k}">−</button>
-                        <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-tambah" data-id="${k}">+</button>
-                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-hapus" data-id="${k}">×</button>
+                <div class="item-right">
+                    <div class="item-subtotal">${rupiah(sub)}</div>
+                    <div>
+                        <button class="qty-btn me-1 btn-kurang" data-id="${k}">−</button>
+                        <button class="qty-btn me-1 btn-tambah" data-id="${k}">+</button>
+                        <button class="qty-btn danger btn-hapus" data-id="${k}">×</button>
                     </div>
                 </div>
             </div>`;
@@ -496,7 +538,6 @@ btnSimpanTransaksi.addEventListener("click", () => {
     const kode = generateKode();
     const trxId = DB.nextId("transaksi");
 
-    // Simpan transaksi
     const trxList = DB.get("transaksi");
     trxList.push({
         id: trxId,
@@ -508,7 +549,6 @@ btnSimpanTransaksi.addEventListener("click", () => {
     });
     DB.set("transaksi", trxList);
 
-    // Simpan detail
     const detailList = DB.get("detail_transaksi");
     Object.values(cart).forEach(it => {
         detailList.push({
@@ -523,7 +563,6 @@ btnSimpanTransaksi.addEventListener("click", () => {
     });
     DB.set("detail_transaksi", detailList);
 
-    // Tampilkan struk
     tampilkanStruk({
         kode_transaksi: kode,
         nama_kasir: currentUser.nama,
@@ -532,11 +571,10 @@ btnSimpanTransaksi.addEventListener("click", () => {
         items: Object.values(cart)
     });
 
-    // Reset
     cart = {};
     inputBayar.value = "";
     renderCart();
-    showToast('<i class="bi bi-check-circle me-1"></i> Transaksi berhasil disimpan!', "success");
+    showToast('<i class="bi bi-check-circle-fill me-1"></i> Transaksi disimpan!', "success");
     updateStats();
 });
 
@@ -547,8 +585,8 @@ function tampilkanStruk(trx) {
     let itemHtml = "";
     trx.items.forEach(it => {
         itemHtml += `
-            <div class="mb-2">
-                <div class="fw-bold">${escapeHtml(it.nama)}</div>
+            <div class="item-block">
+                <div class="item-name">${escapeHtml(it.nama)}</div>
                 <div class="row-line">
                     <span>${rupiah(it.harga)} × ${it.jumlah}</span>
                     <span>${rupiah(it.harga * it.jumlah)}</span>
@@ -557,25 +595,28 @@ function tampilkanStruk(trx) {
     });
 
     strukBody.innerHTML = `
-        <div class="struk-box text-center">
-            <h5 class="fw-bold mb-0">KASIR WAHANA</h5>
-            <small class="text-muted">Tiket Wahana Rekreasi</small>
-            <hr>
-        </div>
         <div class="struk-box">
-            <div class="row-line"><span>Kode</span><span>${escapeHtml(trx.kode_transaksi)}</span></div>
-            <div class="row-line"><span>Tanggal</span><span>${formatTanggal(trx.tanggal)}</span></div>
-            <div class="row-line"><span>Kasir</span><span>${escapeHtml(trx.nama_kasir)}</span></div>
+            <div class="struk-header">
+                <div style="font-size:2rem;">🎪</div>
+                <h5>KASIR WAHANA</h5>
+                <small>Tiket Wahana Rekreasi</small>
+            </div>
+            <div style="padding-top:.75rem;">
+                <div class="row-line"><span>Kode</span><strong>${escapeHtml(trx.kode_transaksi)}</strong></div>
+                <div class="row-line"><span>Tanggal</span><span>${formatTanggal(trx.tanggal)}</span></div>
+                <div class="row-line"><span>Kasir</span><span>${escapeHtml(trx.nama_kasir)}</span></div>
+            </div>
             <hr>
             ${itemHtml}
             <hr>
-            <div class="row-line"><span>Total</span><strong>${rupiah(trx.total)}</strong></div>
-            <div class="row-line"><span>Bayar</span><span>${rupiah(trx.bayar)}</span></div>
-            <div class="row-line"><span>Kembalian</span><span>${rupiah(trx.kembalian)}</span></div>
+            <div class="row-line"><span>Subtotal</span><span>${rupiah(trx.total)}</span></div>
+            <div class="total-row"><span>TOTAL</span><span>${rupiah(trx.total)}</span></div>
             <hr>
-            <div class="text-center mt-2">
-                <p class="mb-0">Terima kasih telah berkunjung!</p>
-                <p class="text-muted">Selamat bermain 🎉</p>
+            <div class="row-line"><span>Bayar</span><span>${rupiah(trx.bayar)}</span></div>
+            <div class="row-line"><span>Kembalian</span><strong style="color:#059669;">${rupiah(trx.kembalian)}</strong></div>
+            <div class="struk-footer">
+                <p style="margin:0;">Terima kasih telah berkunjung!</p>
+                <p style="margin:0;">Selamat bermain 🎉</p>
             </div>
         </div>
     `;
@@ -618,17 +659,17 @@ function muatLaporan() {
         totalPendapatan += r.total || 0;
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${i + 1}</td>
-            <td><strong>${escapeHtml(r.kode_transaksi)}</strong></td>
+            <td><strong>${i + 1}</strong></td>
+            <td><span style="font-family:'JetBrains Mono',monospace;font-size:.82rem;background:rgba(99,102,241,.08);padding:.25rem .55rem;border-radius:6px;">${escapeHtml(r.kode_transaksi)}</span></td>
             <td>${formatTanggal(r.tanggal)}</td>
             <td>${escapeHtml(r.nama_kasir || "-")}</td>
-            <td>${rupiah(r.total)}</td>
+            <td style="font-weight:700;color:var(--primary);">${rupiah(r.total)}</td>
             <td class="text-center">
-                <button class="btn btn-primary btn-sm me-1 btn-lihat-struk" data-id="${r.id}" title="Lihat Struk">
+                <button class="btn-action view me-1 btn-lihat-struk" data-id="${r.id}" title="Lihat Struk">
                     <i class="bi bi-receipt"></i>
                 </button>
-                <button class="btn btn-danger btn-sm btn-hapus-trx" data-id="${r.id}" data-kode="${escapeHtml(r.kode_transaksi)}" title="Hapus">
-                    <i class="bi bi-trash"></i>
+                <button class="btn-action delete btn-hapus-trx" data-id="${r.id}" data-kode="${escapeHtml(r.kode_transaksi)}" title="Hapus">
+                    <i class="bi bi-trash-fill"></i>
                 </button>
             </td>
         `;
@@ -663,7 +704,7 @@ function lihatStrukLama(trxId) {
 btnFilter.addEventListener("click", muatLaporan);
 
 // ============================================================
-// STATISTIK DASHBOARD
+// STATISTIK
 // ============================================================
 function updateStats() {
     const wahana = DB.get("wahana");
@@ -686,11 +727,11 @@ function updateStats() {
 }
 
 // ============================================================
-// MUAT DATA
+// LOAD
 // ============================================================
 function muatSemuaData() {
     renderWahana();
     updateStats();
 }
 
-console.log("✅ Aplikasi Kasir Wahana (DEMO) siap!");
+console.log("✅ Kasir Wahana Modern UI siap!");

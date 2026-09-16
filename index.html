@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kasir Wahana</title>
+    <title>Kasir Wahana — Modern POS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
@@ -11,185 +11,212 @@
 <body>
 
 <!-- ============================================================ -->
-<!-- HALAMAN LOGIN -->
+<!-- LOGIN PAGE -->
 <!-- ============================================================ -->
 <div id="loginPage" class="login-wrapper">
     <div class="login-card">
-        <div class="text-center mb-4">
-            <i class="bi bi-ticket-perforated-fill text-primary" style="font-size: 3rem;"></i>
-            <h3 class="fw-bold mt-2">Kasir Wahana</h3>
-            <p class="text-muted small">Silakan login untuk melanjutkan</p>
+        <div class="logo-icon">
+            <i class="bi bi-ticket-perforated-fill"></i>
         </div>
+        <h3>Kasir Wahana</h3>
+        <p class="subtitle">Masuk untuk melanjutkan ke sistem</p>
 
-        <div id="loginError" class="alert alert-danger py-2 d-none">
-            <i class="bi bi-exclamation-triangle me-1"></i>
+        <div id="loginError" class="alert alert-danger py-2 d-none" style="border-radius:12px;font-size:.88rem;">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
             <span id="loginErrorMsg"></span>
         </div>
 
         <form id="formLogin" novalidate>
             <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required autofocus />
-                <div class="invalid-feedback">Username wajib diisi.</div>
+                <label class="form-label-modern">Username</label>
+                <div class="input-icon-wrapper">
+                    <input type="text" id="loginUsername" class="form-control-modern" placeholder="Masukkan username" required autofocus />
+                    <i class="bi bi-person"></i>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" id="loginPassword" class="form-control" placeholder="Masukkan password" required />
-                <div class="invalid-feedback">Password wajib diisi.</div>
+            <div class="mb-4">
+                <label class="form-label-modern">Password</label>
+                <div class="input-icon-wrapper">
+                    <input type="password" id="loginPassword" class="form-control-modern" placeholder="Masukkan password" required />
+                    <i class="bi bi-lock"></i>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2">
-                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+            <button type="submit" class="btn-gradient w-100 py-3">
+                <i class="bi bi-box-arrow-in-right"></i> Login
             </button>
         </form>
 
-        <div class="text-center mt-3 small text-muted">
-            <strong>Demo:</strong><br>
-            admin / admin123 <br>
-            rina / rina123
+        <div class="text-center mt-4 pt-3" style="border-top:1px dashed var(--border);">
+            <small class="text-muted">
+                <strong>Demo Login:</strong><br>
+                <code>admin</code> / <code>admin123</code> &nbsp;·&nbsp;
+                <code>rina</code> / <code>rina123</code>
+            </small>
         </div>
     </div>
 </div>
 
 <!-- ============================================================ -->
-<!-- HALAMAN APLIKASI (setelah login) -->
+<!-- APP PAGE -->
 <!-- ============================================================ -->
 <div id="appPage" class="d-none">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="#"><i class="bi bi-ticket-perforated-fill me-2"></i>Kasir Wahana</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#" data-page="dashboard">
-                            <i class="bi bi-house"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="kasir">
-                            <i class="bi bi-cart"></i> Kasir
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="wahana">
-                            <i class="bi bi-ticket"></i> Wahana
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="laporan">
-                            <i class="bi bi-file-earmark-text"></i> Laporan
-                        </a>
-                    </li>
-                </ul>
-                <span class="navbar-text text-white me-3">
-                    <i class="bi bi-person-circle"></i>
-                    <span id="userNama">-</span>
-                    <span class="badge bg-light text-primary ms-1" id="userRole">-</span>
-                </span>
-                <button id="btnLogout" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Logout
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-modern">
+        <div class="container-main" style="padding-top:0;padding-bottom:0;">
+            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
+                <a class="navbar-brand" href="#">
+                    <i class="bi bi-ticket-perforated-fill"></i>
+                    Kasir Wahana
+                </a>
+                <button class="navbar-toggler d-lg-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                    <i class="bi bi-list fs-3 text-primary"></i>
                 </button>
+                <div class="collapse navbar-collapse d-lg-flex" id="navMenu">
+                    <ul class="navbar-nav mx-auto my-3 my-lg-0 gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-page="dashboard">
+                                <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="kasir">
+                                <i class="bi bi-cart-fill"></i> Kasir
+                            </a>
+                        </li>
+                        <li class="nav-item nav-wahana-link">
+                            <a class="nav-link" href="#" data-page="wahana">
+                                <i class="bi bi-ticket-detailed-fill"></i> Wahana
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="laporan">
+                                <i class="bi bi-graph-up-arrow"></i> Laporan
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="user-badge">
+                            <div class="avatar" id="userAvatar">?</div>
+                            <div class="info">
+                                <span class="name" id="userNama">-</span>
+                                <span class="role" id="userRole">-</span>
+                            </div>
+                        </div>
+                        <button id="btnLogout" class="btn-logout">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4 pb-5">
+    <div class="container-main">
 
-        <!-- ============ DASHBOARD ============ -->
+        <!-- ==================== DASHBOARD ==================== -->
         <div id="page-dashboard" class="app-page">
-            <h3 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h3>
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="stats-card">
-                        <div class="label">Wahana Aktif</div>
-                        <div class="number" id="statWahana">0</div>
-                    </div>
+            <h2 class="page-title">
+                <span class="title-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+                Dashboard
+            </h2>
+
+            <div class="stat-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
+                    <div class="stat-label">Wahana Aktif</div>
+                    <div class="stat-value" id="statWahana">0</div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="stats-card green">
-                        <div class="label">Total Transaksi</div>
-                        <div class="number" id="statTransaksi">0</div>
-                    </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="bi bi-receipt-cutoff"></i></div>
+                    <div class="stat-label">Total Transaksi</div>
+                    <div class="stat-value" id="statTransaksi">0</div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="stats-card orange">
-                        <div class="label">Transaksi Hari Ini</div>
-                        <div class="number" id="statHariIni">0</div>
-                    </div>
+                <div class="stat-card pink">
+                    <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+                    <div class="stat-label">Hari Ini</div>
+                    <div class="stat-value" id="statHariIni">0</div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="stats-card red">
-                        <div class="label">Total Pendapatan</div>
-                        <div class="number" id="statPendapatan" style="font-size:1.2rem;">Rp 0</div>
-                    </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+                    <div class="stat-label">Total Pendapatan</div>
+                    <div class="stat-value small" id="statPendapatan">Rp 0</div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3">Menu Cepat</h5>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100 py-3 btn-goto" data-page="kasir">
-                                <i class="bi bi-cart-check fs-4 d-block mb-1"></i> Kasir
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-success w-100 py-3 btn-goto" data-page="wahana">
-                                <i class="bi bi-ticket-perforated fs-4 d-block mb-1"></i> Data Wahana
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-warning w-100 py-3 btn-goto" data-page="laporan">
-                                <i class="bi bi-graph-up fs-4 d-block mb-1"></i> Laporan
-                            </button>
-                        </div>
+
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h5><i class="bi bi-lightning-charge-fill text-warning"></i> Menu Cepat</h5>
+                </div>
+                <div class="card-body-modern">
+                    <div class="quick-menu">
+                        <button class="quick-btn bg-1 btn-goto" data-page="kasir">
+                            <i class="bi bi-cart-check-fill"></i>
+                            <span>Mulai Transaksi</span>
+                        </button>
+                        <button class="quick-btn bg-2 btn-goto" data-page="wahana">
+                            <i class="bi bi-ticket-detailed-fill"></i>
+                            <span>Kelola Wahana</span>
+                        </button>
+                        <button class="quick-btn bg-3 btn-goto" data-page="laporan">
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                            <span>Lihat Laporan</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ============ KASIR ============ -->
+        <!-- ==================== KASIR ==================== -->
         <div id="page-kasir" class="app-page d-none">
-            <h3 class="fw-bold mb-3"><i class="bi bi-cart-check me-2"></i>Kasir</h3>
+            <h2 class="page-title">
+                <span class="title-icon"><i class="bi bi-cart-check-fill"></i></span>
+                Kasir
+            </h2>
+
             <div class="row g-3">
                 <div class="col-lg-7">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="fw-bold mb-3">Pilih Wahana</h5>
-                            <div class="row g-3" id="wahanaGrid"></div>
+                    <div class="card-modern">
+                        <div class="card-header-modern">
+                            <h5><i class="bi bi-grid-3x3-gap-fill text-primary"></i> Pilih Wahana</h5>
+                            <span class="badge-status aktif" id="badgeJumlahWahana">0 tersedia</span>
+                        </div>
+                        <div class="card-body-modern">
+                            <div class="wahana-grid" id="wahanaGrid"></div>
                             <div id="emptyWahanaKasir" class="empty-state d-none">
-                                <i class="bi bi-ticket-perforated"></i>
-                                <p>Belum ada wahana aktif.</p>
+                                <div class="empty-icon"><i class="bi bi-ticket-perforated"></i></div>
+                                <h6>Belum Ada Wahana Aktif</h6>
+                                <p>Tambahkan wahana terlebih dahulu di menu Wahana</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-lg-5">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="fw-bold mb-3"><i class="bi bi-cart me-1"></i>Keranjang</h5>
-                            <div id="cartList" class="mb-3">
-                                <p class="text-muted text-center py-3">Belum ada item dipilih</p>
+                    <div class="card-modern">
+                        <div class="card-header-modern">
+                            <h5><i class="bi bi-bag-check-fill text-primary"></i> Keranjang</h5>
+                            <span class="badge-status aktif" id="badgeJumlahItem">0 item</span>
+                        </div>
+                        <div class="card-body-modern">
+                            <div id="cartList" style="max-height:280px;overflow-y:auto;"></div>
+
+                            <div class="cart-summary">
+                                <div class="row-line total">
+                                    <span>Total</span>
+                                    <span id="cartTotal">Rp 0</span>
+                                </div>
+                                <div class="row-line kembalian">
+                                    <span>Kembalian</span>
+                                    <span id="cartKembalian">Rp 0</span>
+                                </div>
                             </div>
-                            <hr>
-                            <div class="d-flex justify-content-between fw-bold mb-2">
-                                <span>Total:</span>
-                                <span class="text-primary fs-5" id="cartTotal">Rp 0</span>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">Uang Bayar</label>
-                                <input type="number" id="inputBayar" class="form-control form-control-lg" placeholder="0" min="0" />
-                            </div>
-                            <div class="d-flex justify-content-between mb-3">
-                                <span>Kembalian:</span>
-                                <span class="fw-bold text-success" id="cartKembalian">Rp 0</span>
-                            </div>
-                            <button id="btnSimpanTransaksi" class="btn btn-success w-100 py-2">
-                                <i class="bi bi-check-circle me-1"></i> Simpan Transaksi
+
+                            <label class="form-label-modern">Uang Bayar</label>
+                            <input type="number" id="inputBayar" class="form-control-modern input-bayar mb-3" placeholder="0" min="0" />
+
+                            <button id="btnSimpanTransaksi" class="btn-success-gradient w-100">
+                                <i class="bi bi-check-circle-fill"></i> Simpan Transaksi
                             </button>
                         </div>
                     </div>
@@ -197,100 +224,104 @@
             </div>
         </div>
 
-        <!-- ============ WAHANA (CRUD) ============ -->
+        <!-- ==================== WAHANA ==================== -->
         <div id="page-wahana" class="app-page d-none">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="fw-bold mb-0"><i class="bi bi-ticket-perforated me-2"></i>Data Wahana</h3>
-                <!-- TOMBOL TAMBAH -->
-                <button class="btn btn-primary" id="btnTambahWahana">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h2 class="page-title mb-0">
+                    <span class="title-icon"><i class="bi bi-ticket-detailed-fill"></i></span>
+                    Data Wahana
+                </h2>
+                <button class="btn-add" id="btnTambahWahana">
                     <i class="bi bi-plus-lg"></i> Tambah Wahana
                 </button>
             </div>
 
-            <div class="card">
-                <div class="card-body">
+            <div class="card-modern">
+                <div class="card-body-modern p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table-modern">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th style="width:60px;">#</th>
                                     <th>Nama Wahana</th>
                                     <th>Harga</th>
                                     <th>Status</th>
-                                    <th class="text-center">Aksi</th>
+                                    <th style="width:120px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyWahana"></tbody>
                         </table>
                     </div>
                     <div id="emptyWahana" class="empty-state d-none">
-                        <i class="bi bi-ticket-perforated"></i>
-                        <p>Belum ada data wahana.</p>
+                        <div class="empty-icon"><i class="bi bi-ticket-perforated"></i></div>
+                        <h6>Belum Ada Data Wahana</h6>
+                        <p>Klik "Tambah Wahana" untuk menambahkan data baru</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ============ LAPORAN ============ -->
+        <!-- ==================== LAPORAN ==================== -->
         <div id="page-laporan" class="app-page d-none">
-            <h3 class="fw-bold mb-3"><i class="bi bi-file-earmark-text me-2"></i>Laporan Transaksi</h3>
-            <div class="card mb-3">
-                <div class="card-body">
+            <h2 class="page-title">
+                <span class="title-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
+                Laporan Transaksi
+            </h2>
+
+            <div class="card-modern mb-3">
+                <div class="card-body-modern">
                     <div class="row g-2 align-items-end">
                         <div class="col-md-4">
-                            <label class="form-label">Dari Tanggal</label>
-                            <input type="date" id="filterDari" class="form-control" />
+                            <label class="form-label-modern">Dari Tanggal</label>
+                            <input type="date" id="filterDari" class="form-control-modern" />
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Sampai Tanggal</label>
-                            <input type="date" id="filterSampai" class="form-control" />
+                            <label class="form-label-modern">Sampai Tanggal</label>
+                            <input type="date" id="filterSampai" class="form-control-modern" />
                         </div>
                         <div class="col-md-4">
-                            <button id="btnFilter" class="btn btn-primary w-100">
-                                <i class="bi bi-search"></i> Filter
+                            <button id="btnFilter" class="btn-gradient w-100">
+                                <i class="bi bi-funnel-fill"></i> Filter
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <div class="stats-card">
-                        <div class="label">Jumlah Transaksi</div>
-                        <div class="number" id="lapJumlah">0</div>
-                    </div>
+            <div class="stat-grid">
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="bi bi-receipt"></i></div>
+                    <div class="stat-label">Jumlah Transaksi</div>
+                    <div class="stat-value" id="lapJumlah">0</div>
                 </div>
-                <div class="col-md-6">
-                    <div class="stats-card green">
-                        <div class="label">Total Pendapatan</div>
-                        <div class="number" id="lapPendapatan" style="font-size:1.4rem;">Rp 0</div>
-                    </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                    <div class="stat-label">Total Pendapatan</div>
+                    <div class="stat-value small" id="lapPendapatan">Rp 0</div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
+            <div class="card-modern">
+                <div class="card-body-modern p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table-modern">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th style="width:60px;">#</th>
                                     <th>Kode</th>
                                     <th>Tanggal</th>
                                     <th>Kasir</th>
                                     <th>Total</th>
-                                    <th>Bayar</th>
-                                    <th>Kembalian</th>
-                                    <th class="text-center">Aksi</th>
+                                    <th style="width:110px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyLaporan"></tbody>
                         </table>
                     </div>
                     <div id="emptyLaporan" class="empty-state d-none">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <p>Tidak ada transaksi pada periode ini.</p>
+                        <div class="empty-icon"><i class="bi bi-file-earmark-x"></i></div>
+                        <h6>Tidak Ada Transaksi</h6>
+                        <p>Belum ada transaksi pada periode yang dipilih</p>
                     </div>
                 </div>
             </div>
@@ -300,7 +331,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- MODAL TAMBAH / EDIT WAHANA -->
+<!-- MODAL WAHANA -->
 <!-- ============================================================ -->
 <div class="modal fade" id="modalWahana" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -308,33 +339,33 @@
             <form id="formWahana" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalWahanaTitle">
-                        <i class="bi bi-plus-circle me-2"></i>Tambah Wahana
+                        <i class="bi bi-plus-circle-fill"></i> Tambah Wahana
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="wahanaId" />
                     <div class="mb-3">
-                        <label class="form-label">Nama Wahana <span class="text-danger">*</span></label>
-                        <input type="text" id="wahanaNama" class="form-control" required placeholder="Contoh: ATV" />
-                        <div class="invalid-feedback">Nama wahana wajib diisi.</div>
+                        <label class="form-label-modern">Nama Wahana <span class="required">*</span></label>
+                        <input type="text" id="wahanaNama" class="form-control-modern" required placeholder="Contoh: ATV" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Harga (Rp) <span class="text-danger">*</span></label>
-                        <input type="number" id="wahanaHarga" class="form-control" min="0" required placeholder="0" />
-                        <div class="invalid-feedback">Harga wajib diisi minimal 0.</div>
+                        <label class="form-label-modern">Harga (Rp) <span class="required">*</span></label>
+                        <input type="number" id="wahanaHarga" class="form-control-modern" min="0" required placeholder="0" />
                     </div>
                     <div class="mb-0">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select id="wahanaStatus" class="form-select" required>
-                            <option value="aktif">Aktif</option>
-                            <option value="nonaktif">Nonaktif</option>
+                        <label class="form-label-modern">Status <span class="required">*</span></label>
+                        <select id="wahanaStatus" class="form-select-modern" required>
+                            <option value="aktif">✅ Aktif</option>
+                            <option value="nonaktif">⛔ Nonaktif</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" id="btnSimpanWahana">Simpan</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:12px;font-weight:600;">Batal</button>
+                    <button type="submit" class="btn-gradient" id="btnSimpanWahana">
+                        <i class="bi bi-check-lg"></i> Simpan
+                    </button>
                 </div>
             </form>
         </div>
@@ -342,22 +373,21 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- MODAL KONFIRMASI HAPUS -->
+<!-- MODAL HAPUS -->
 <!-- ============================================================ -->
 <div class="modal fade" id="modalHapus" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Konfirmasi</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-body text-center py-4">
+                <div style="width:70px;height:70px;margin:0 auto 1rem;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2rem;"></i>
+                </div>
+                <h6 class="fw-bold mb-2">Konfirmasi Hapus</h6>
+                <p class="text-muted mb-0" id="hapusPesan" style="font-size:.9rem;"></p>
             </div>
-            <div class="modal-body text-center">
-                <i class="bi bi-trash text-danger" style="font-size:3rem;"></i>
-                <p class="mt-3 mb-0" id="hapusPesan">Yakin ingin menghapus data ini?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger" id="btnKonfirmasiHapus">
+            <div class="modal-footer justify-content-center pb-4">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius:12px;font-weight:600;">Batal</button>
+                <button type="button" class="btn btn-danger px-4" id="btnKonfirmasiHapus" style="border-radius:12px;font-weight:600;">
                     <i class="bi bi-trash"></i> Hapus
                 </button>
             </div>
@@ -372,48 +402,32 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Struk Pembayaran</h5>
+                <h5 class="modal-title"><i class="bi bi-receipt-cutoff"></i> Struk Pembayaran</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="strukBody"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                <button type="button" class="btn btn-success" onclick="window.print()">
-                    <i class="bi bi-printer"></i> Cetak
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:12px;font-weight:600;">Tutup</button>
+                <button type="button" class="btn-gradient" onclick="window.print()">
+                    <i class="bi bi-printer-fill"></i> Cetak
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- TOAST -->
-<!-- ============================================================ -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div id="liveToast" class="toast align-items-center text-white border-0" role="alert">
         <div class="d-flex">
-            <div class="toast-body" id="toastMessage">
-                <i class="bi bi-check-circle-fill me-2"></i> Berhasil!
-            </div>
+            <div class="toast-body" id="toastMessage"><i class="bi bi-check-circle-fill me-2"></i> Berhasil!</div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- SCRIPTS -->
-<!-- ============================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script type="importmap">
-{
-    "imports": {
-        "firebase/app": "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js",
-        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"
-    }
-}
-</script>
-
-<script type="module" src="main.js"></script>
+<script src="main.js"></script>
 
 </body>
+</html>
