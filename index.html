@@ -15,103 +15,150 @@
 <!-- ============================================================ -->
 <div id="loginPage" class="login-wrapper">
     <div class="login-card">
-        <div class="logo-icon">
-            <i class="bi bi-ticket-perforated-fill"></i>
+        <div class="logo-container">
+            <div class="logo-icon">🎪</div>
         </div>
         <h3>Kasir Wahana</h3>
         <p class="subtitle">Masuk untuk melanjutkan ke sistem</p>
 
-        <div id="loginError" class="alert alert-danger py-2 d-none" style="border-radius:12px;font-size:.88rem;">
-            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        <div id="loginError" class="alert alert-danger py-2 d-none">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <span id="loginErrorMsg"></span>
         </div>
 
         <form id="formLogin" novalidate>
-            <div class="mb-3">
-                <label class="form-label-modern">Username</label>
-                <div class="input-icon-wrapper">
-                    <input type="text" id="loginUsername" class="form-control-modern" placeholder="Masukkan username" required autofocus />
-                    <i class="bi bi-person"></i>
-                </div>
+            <div class="input-premium">
+                <input type="text" id="loginUsername" placeholder="Masukkan username" required autofocus />
+                <i class="bi bi-person-fill input-icon"></i>
             </div>
-            <div class="mb-4">
-                <label class="form-label-modern">Password</label>
-                <div class="input-icon-wrapper">
-                    <input type="password" id="loginPassword" class="form-control-modern" placeholder="Masukkan password" required />
-                    <i class="bi bi-lock"></i>
-                </div>
+            <div class="input-premium">
+                <input type="password" id="loginPassword" placeholder="Masukkan password" required />
+                <i class="bi bi-shield-lock-fill input-icon"></i>
             </div>
-            <button type="submit" class="btn-gradient w-100 py-3">
-                <i class="bi bi-box-arrow-in-right"></i> Login
+            <button type="submit" class="btn-premium">
+                <i class="bi bi-box-arrow-in-right"></i> Login Sekarang
             </button>
         </form>
 
-        <div class="text-center mt-4 pt-3" style="border-top:1px dashed var(--border);">
-            <small class="text-muted">
-                <strong>Demo Login:</strong><br>
-                <code>admin</code> / <code>admin123</code> &nbsp;·&nbsp;
-                <code>rina</code> / <code>rina123</code>
-            </small>
+        <div class="login-footer">
+            <strong>Demo Login</strong>
+            <code>admin / admin123</code>
+            <code>rina / rina123</code>
         </div>
     </div>
 </div>
-
 <!-- ============================================================ -->
 <!-- APP PAGE -->
 <!-- ============================================================ -->
 <div id="appPage" class="d-none">
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-modern">
-        <div class="container-main" style="padding-top:0;padding-bottom:0;">
-            <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
-                <a class="navbar-brand" href="#">
-                    <i class="bi bi-ticket-perforated-fill"></i>
-                    Kasir Wahana
-                </a>
-                <button class="navbar-toggler d-lg-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                    <i class="bi bi-list fs-3 text-primary"></i>
+<!-- NAVBAR -->
+<nav class="navbar-app">
+    <div class="container-app" style="padding-top:0;padding-bottom:0;">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            
+            <!-- Logo -->
+            <a class="brand-logo" href="#">
+                <div class="brand-icon-wrapper">
+                    <div class="brand-icon">🎪</div>
+                </div>
+                <span class="brand-text">Kasir Wahana</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <ul class="nav-pills-app my-lg-0">
+                <li><a class="nav-link active" href="#" data-page="dashboard">📊 Dashboard</a></li>
+                <li><a class="nav-link" href="#" data-page="kasir">🛒 Kasir</a></li>
+                <li class="nav-wahana-link"><a class="nav-link" href="#" data-page="wahana">🎢 Wahana</a></li>
+                <li><a class="nav-link" href="#" data-page="laporan">📈 Laporan</a></li>
+            </ul>
+
+            <!-- Desktop Actions -->
+            <div class="d-none d-lg-flex align-items-center gap-2">
+                <div class="live-clock">
+                    <span>🕐</span>
+                    <span class="time" id="liveTime">--:--:--</span>
+                    <span class="date" id="liveDate">---</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle" data-tooltip="Mode Gelap">
+                    <span id="themeIcon">🌙</span>
                 </button>
-                <div class="collapse navbar-collapse d-lg-flex" id="navMenu">
-                    <ul class="navbar-nav mx-auto my-3 my-lg-0 gap-1">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#" data-page="dashboard">
-                                <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-page="kasir">
-                                <i class="bi bi-cart-fill"></i> Kasir
-                            </a>
-                        </li>
-                        <li class="nav-item nav-wahana-link">
-                            <a class="nav-link" href="#" data-page="wahana">
-                                <i class="bi bi-ticket-detailed-fill"></i> Wahana
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" data-page="laporan">
-                                <i class="bi bi-graph-up-arrow"></i> Laporan
-                            </a>
-                        </li>
-                    </ul>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <div class="user-badge">
-                            <div class="avatar" id="userAvatar">?</div>
-                            <div class="info">
-                                <span class="name" id="userNama">-</span>
-                                <span class="role" id="userRole">-</span>
-                            </div>
-                        </div>
-                        <button id="btnLogout" class="btn-logout">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </button>
+                <button class="notif-btn" id="notifBtn" data-tooltip="Notifikasi">
+                    <span>🔔</span>
+                    <span class="notif-badge" id="notifBadge">0</span>
+                </button>
+                <div class="user-pill">
+                    <div class="avatar" id="userAvatar">?</div>
+                    <div class="info">
+                        <span class="name" id="userNama">-</span>
+                        <span class="role" id="userRole">-</span>
                     </div>
                 </div>
+                <button id="btnLogout" class="btn-logout">
+                    🚪 Keluar
+                </button>
             </div>
-        </div>
-    </nav>
 
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn d-lg-none" id="mobileMenuBtn">
+                <span>☰</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+    <div class="mobile-drawer-header">
+        <div class="title">
+            <span style="font-size:1.4rem;">🎪</span> Menu
+        </div>
+        <button class="mobile-drawer-close" id="mobileDrawerClose">✕</button>
+    </div>
+
+    <div class="mobile-drawer-user">
+        <div class="avatar" id="mobileAvatar">?</div>
+        <div class="info">
+            <div class="name" id="mobileUserNama">-</div>
+            <div class="role" id="mobileUserRole">-</div>
+        </div>
+    </div>
+
+    <ul class="mobile-drawer-menu">
+        <li>
+            <a href="#" data-page="dashboard" class="mobile-nav-link active">
+                <span class="menu-icon">📊</span> Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="#" data-page="kasir" class="mobile-nav-link">
+                <span class="menu-icon">🛒</span> Kasir
+            </a>
+        </li>
+        <li class="mobile-wahana-link">
+            <a href="#" data-page="wahana" class="mobile-nav-link">
+                <span class="menu-icon">🎢</span> Wahana
+            </a>
+        </li>
+        <li>
+            <a href="#" data-page="laporan" class="mobile-nav-link">
+                <span class="menu-icon">📈</span> Laporan
+            </a>
+        </li>
+    </ul>
+
+    <!-- Mobile Clock -->
+    <div class="live-clock" style="width:100%;justify-content:center;margin-bottom:1rem;">
+        <span>🕐</span>
+        <span class="time" id="mobileLiveTime">--:--:--</span>
+        <span class="date" id="mobileLiveDate">---</span>
+    </div>
+
+    <button class="mobile-drawer-logout" id="mobileLogout">
+        🚪 Keluar
+    </button>
+</div>
     <div class="container-main">
 
         <!-- ==================== DASHBOARD ==================== -->
@@ -121,48 +168,56 @@
                 Dashboard
             </h2>
 
-            <div class="stat-grid">
-                <div class="stat-card blue">
-                    <div class="stat-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
-                    <div class="stat-label">Wahana Aktif</div>
-                    <div class="stat-value" id="statWahana">0</div>
-                </div>
-                <div class="stat-card purple">
-                    <div class="stat-icon"><i class="bi bi-receipt-cutoff"></i></div>
-                    <div class="stat-label">Total Transaksi</div>
-                    <div class="stat-value" id="statTransaksi">0</div>
-                </div>
-                <div class="stat-card pink">
-                    <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
-                    <div class="stat-label">Hari Ini</div>
-                    <div class="stat-value" id="statHariIni">0</div>
-                </div>
-                <div class="stat-card green">
-                    <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
-                    <div class="stat-label">Total Pendapatan</div>
-                    <div class="stat-value small" id="statPendapatan">Rp 0</div>
-                </div>
-            </div>
-
+            <<div class="stat-grid">
+    <div class="stat-card c-1">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);">🎢</div>
+        <div class="stat-label">Wahana Aktif</div>
+        <div class="stat-value" id="statWahana">0</div>
+    </div>
+    <div class="stat-card c-2">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);">🧾</div>
+        <div class="stat-label">Total Transaksi</div>
+        <div class="stat-value" id="statTransaksi">0</div>
+    </div>
+    <div class="stat-card c-3">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#f97316,#ec4899);">📅</div>
+        <div class="stat-label">Hari Ini</div>
+        <div class="stat-value" id="statHariIni">0</div>
+    </div>
+    <div class="stat-card c-4">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#14b8a6);">💰</div>
+        <div class="stat-label">Total Pendapatan</div>
+        <div class="stat-value small" id="statPendapatan">Rp 0</div>
+    </div>
+</div>
             <div class="card-modern">
                 <div class="card-header-modern">
                     <h5><i class="bi bi-lightning-charge-fill text-warning"></i> Menu Cepat</h5>
                 </div>
                 <div class="card-body-modern">
-                    <div class="quick-menu">
-                        <button class="quick-btn bg-1 btn-goto" data-page="kasir">
-                            <i class="bi bi-cart-check-fill"></i>
-                            <span>Mulai Transaksi</span>
-                        </button>
-                        <button class="quick-btn bg-2 btn-goto" data-page="wahana">
-                            <i class="bi bi-ticket-detailed-fill"></i>
-                            <span>Kelola Wahana</span>
-                        </button>
-                        <button class="quick-btn bg-3 btn-goto" data-page="laporan">
-                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                            <span>Lihat Laporan</span>
-                        </button>
-                    </div>
+                    <<div class="quick-menu">
+    <button class="quick-btn bg-1 btn-goto" data-page="kasir">
+        <div style="font-size:2.4rem;">🛒</div>
+        <div>
+            <div>Mulai Transaksi</div>
+            <div class="sub">Proses penjualan tiket</div>
+        </div>
+    </button>
+    <button class="quick-btn bg-2 btn-goto" data-page="wahana">
+        <div style="font-size:2.4rem;">🎢</div>
+        <div>
+            <div>Kelola Wahana</div>
+            <div class="sub">Tambah, edit, hapus</div>
+        </div>
+    </button>
+    <button class="quick-btn bg-3 btn-goto" data-page="laporan">
+        <div style="font-size:2.4rem;">📊</div>
+        <div>
+            <div>Lihat Laporan</div>
+            <div class="sub">Riwayat transaksi</div>
+        </div>
+    </button>
+</div>
                 </div>
             </div>
         </div>
@@ -224,43 +279,41 @@
             </div>
         </div>
 
-        <!-- ==================== WAHANA ==================== -->
-        <div id="page-wahana" class="app-page d-none">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <h2 class="page-title mb-0">
-                    <span class="title-icon"><i class="bi bi-ticket-detailed-fill"></i></span>
-                    Data Wahana
-                </h2>
-                <button class="btn-add" id="btnTambahWahana">
-                    <i class="bi bi-plus-lg"></i> Tambah Wahana
-                </button>
-            </div>
+<!-- ==================== WAHANA ==================== -->
+<div id="page-wahana" class="app-page d-none">
+    <div class="page-header">
+        <h2 class="page-title">
+            <span class="title-icon">🎢</span>
+            Data Wahana
+        </h2>
+        <button class="btn-add" id="btnTambahWahana">
+            <i class="bi bi-plus-lg"></i> Tambah Wahana
+        </button>
+    </div>
 
-            <div class="card-modern">
-                <div class="card-body-modern p-0">
-                    <div class="table-responsive">
-                        <table class="table-modern">
-                            <thead>
-                                <tr>
-                                    <th style="width:60px;">#</th>
-                                    <th>Nama Wahana</th>
-                                    <th>Harga</th>
-                                    <th>Status</th>
-                                    <th style="width:120px;" class="text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyWahana"></tbody>
-                        </table>
-                    </div>
-                    <div id="emptyWahana" class="empty-state d-none">
-                        <div class="empty-icon"><i class="bi bi-ticket-perforated"></i></div>
-                        <h6>Belum Ada Data Wahana</h6>
-                        <p>Klik "Tambah Wahana" untuk menambahkan data baru</p>
-                    </div>
-                </div>
+    <div class="card-app">
+        <!-- Toolbar dengan Search & Counter -->
+        <div class="wahana-toolbar">
+            <div class="wahana-search">
+                <input type="text" id="searchWahana" placeholder="Cari wahana..." />
+                <i class="bi bi-search"></i>
+            </div>
+            <div class="wahana-stats-badge">
+                <span id="jumlahWahanaText">0 Wahana</span>
             </div>
         </div>
 
+        <!-- Grid Kartu Wahana -->
+        <div id="wahanaList" class="wahana-list"></div>
+
+        <!-- Empty State -->
+        <div id="emptyWahana" class="empty-state d-none">
+            <div class="empty-icon">🎢</div>
+            <h6>Belum Ada Data Wahana</h6>
+            <p>Klik "Tambah Wahana" untuk menambahkan data baru</p>
+        </div>
+    </div>
+</div>
         <!-- ==================== LAPORAN ==================== -->
         <div id="page-laporan" class="app-page d-none">
             <h2 class="page-title">

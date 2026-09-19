@@ -1082,99 +1082,182 @@ function updateCartProgress() {
     }
 }
 
-// Override renderCart untuk update progress
-const originalRenderCart = renderCart;
-window.renderCart = function() {
-    originalRenderCart();
-    updateCartProgress();
-};
+// ============================================================
+// WAHANA - READ (Card Grid Version)
+// ============================================================
+let searchKeyword = "";
 
-// ---------- EMOJI RAIN saat klik wahana ----------
-document.addEventListener('click', (e) => {
-    const item = e.target.closest('.wahana-item');
-    if (item) {
-        const emoji = item.querySelector('.wahana-emoji')?.textContent || '🎪';
-        showEmojiRain(emoji, e.clientX, e.clientY);
+function renderWahana() {
+    let list = DB.get("wahana");
+    
+    // Filter berdasarkan pencarian
+    if (searchKeyword) {
+        list = list.filter(w => 
+            w.nama_wahana.toLowerCase().includes(searchKeyword.toLowerCase())
+        );
+    }
+
+    const container = document.getElementById("wahanaList");
+    const emptyWahana = document.getElementById("emptyWahana");
+    const jumlahWahanaText = document.getElementById("jumlahWahanaText");
+    
+    // Update counter
+    const total = DB.get("wahana").length;
+    const aktif = DB.get("wahana").filter(w => w.status === "aktif").length;
+    if (jumlahWahanaText) {
+        jumlahWahanaText.textContent = `${total} Wahana · ${aktif} Aktif`;
+    }
+
+    container.innerHTML = "";
+
+    if (list.length === 0) {
+        emptyWahana.classList.remove("d-none");
+        return;
+    }
+    emptyWahana.classList.add("d-none");
+
+    list.forEach((w, i) => {
+        const card = document.createElement("div");
+        card.className = "wahana-card";
+        card.style.animationDelay = `${Math.min(i * 0.03, 0.3)}s`;
+        
+        card.innerHTML = `
+            <div class="wahana-number">${i + 1}</div>
+            
+            <div class="wahana-card-emoji">${w.emoji || getEmoji(w.nama_wahana)}</div>
+            
+            <h5 class="wahana-card-name">${escapeHtml(w.nama_wahana)}</h5>
+            
+            <div class="wahana-card-price">${rupiah(w.harga)}</div>
+            
+            <div class="wahana-card-info">
+                <span class="wahana-card-status ${w.status}">
+                    ${w.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                </span>
+            </div>
+            
+            <div class="wahana-card-actions">
+                <button class="btn-edit-card" data-id="${w.id}">
+                    <i class="bi bi-pencil-fill"></i> Edit
+                </button>
+                <button class="btn-delete-card" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}">
+                    <i class="bi bi-trash-fill"></i> Hapus
+                </button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    // Bind event EDIT
+    container.querySelectorAll(".btn-edit-card").forEach(btn => {
+        btn.addEventListener("click", () => bukaModalWahana(Number(btn.dataset.id)));
+    });
+
+    // Bind event HAPUS
+    container.querySelectorAll(".btn-delete-card").forEach(btn => {
+        btn.addEventListener("click", () => {
+            konfirmasiHapus("wahana", Number(btn.dataset.id), btn.dataset.nama);
+        });
+    });
+}
+
+// ============================================================
+// SEARCH WAHANA — Live Search
+// ============================================================
+document.addEventListener("input", (e) => {
+    if (e.target.id === "searchWahana") {
+        searchKeyword = e.target.value.trim();
+        renderWahana();
     }
 });
 
-// ---------- CONFETTI setelah transaksi berhasil ----------
-const originalTampilkanStruk = tampilkanStruk;
-window.tampilkanStruk = function(trx) {
-    originalTampilkanStruk(trx);
-    setTimeout(() => {
-        launchConfetti();
-        showFloatingNotif(
-            '✅ Transaksi Berhasil!',
-            `${trx.kode_transaksi} — ${rupiah(trx.total)}`,
-            'bi-check-circle-fill'
-        );
-        // Update notif badge
-        const todayCount = DB.get('transaksi').filter(t => 
-            new Date(t.tanggal).toDateString() === new Date().toDateString()
-        ).length;
-        updateNotifBadge(todayCount);
-    }, 300);
-};
+// ============================================================
+// 📱 MOBILE DRAWER MENU
+// ============================================================
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileDrawer = document.getElementById('mobileDrawer');
+const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+const mobileDrawerClose = document.getElementById('mobileDrawerClose');
 
-// ---------- SOUND FEEDBACK (Web Audio API) ----------
-function playSound(type = 'click') {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        if (type === 'success') {
-            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
-            gain.gain.setValueAtTime(0.1, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.4);
-        } else if (type === 'click') {
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            gain.gain.setValueAtTime(0.05, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.1);
-        }
-    } catch (e) {
-        // Silent fail if audio not supported
-    }
+function openDrawer() {
+    if (mobileDrawer) mobileDrawer.classList.add('open');
+    if (mobileDrawerOverlay) mobileDrawerOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
 }
 
-// Play sound on click (optional - uncomment kalau mau)
-// document.addEventListener('click', (e) => {
-//     if (e.target.closest('button, .wahana-item')) {
-//         playSound('click');
-//     }
-// });
+function closeDrawer() {
+    if (mobileDrawer) mobileDrawer.classList.remove('open');
+    if (mobileDrawerOverlay) mobileDrawerOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+}
 
-// ---------- SMOOTH PAGE TRANSITIONS ----------
-document.querySelectorAll('.nav-pills-app .nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-        document.querySelectorAll('.app-page').forEach(page => {
-            if (!page.classList.contains('d-none')) {
-                page.style.animation = 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-            }
-        });
+if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openDrawer);
+if (mobileDrawerClose) mobileDrawerClose.addEventListener('click', closeDrawer);
+if (mobileDrawerOverlay) mobileDrawerOverlay.addEventListener('click', closeDrawer);
+
+// Mobile nav links
+document.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const page = link.dataset.page;
+        if (page) {
+            navigateTo(page);
+            closeDrawer();
+            document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+        }
     });
 });
 
-// ---------- WELCOME MESSAGE ----------
-setTimeout(() => {
-    if (currentUser) {
-        showFloatingNotif(
-            `👋 Halo, ${currentUser.nama}!`,
-            currentUser.role === 'admin' ? 'Selamat bekerja, Admin!' : 'Semangat bekerja hari ini!',
-            'bi-emoji-smile-fill'
-        );
-    }
-}, 1500);
+// Mobile logout
+const mobileLogout = document.getElementById('mobileLogout');
+if (mobileLogout) {
+    mobileLogout.addEventListener('click', () => {
+        closeDrawer();
+        document.getElementById('btnLogout')?.click();
+    });
+}
 
-console.log('🎁 Fitur premium interaktif dimuat!');
-console.log('💡 Tips: coba klik wahana, simpan transaksi, atau toggle dark mode!');
+// Mobile clock
+function updateMobileClock() {
+    const t = document.getElementById('mobileLiveTime');
+    const d = document.getElementById('mobileLiveDate');
+    if (!t || !d) return;
+    
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    t.textContent = `${h}:${m}:${s}`;
+    
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    d.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+}
+updateMobileClock();
+setInterval(updateMobileClock, 1000);
+
+// Update mobile user info saat login
+const originalLoginSuccess2 = window.loginSuccess || loginSuccess;
+window.loginSuccess = function() {
+    originalLoginSuccess2();
+    
+    const mobileAvatar = document.getElementById('mobileAvatar');
+    const mobileUserNama = document.getElementById('mobileUserNama');
+    const mobileUserRole = document.getElementById('mobileUserRole');
+    
+    if (mobileAvatar && currentUser) mobileAvatar.textContent = getInitials(currentUser.nama);
+    if (mobileUserNama && currentUser) mobileUserNama.textContent = currentUser.nama;
+    if (mobileUserRole && currentUser) mobileUserRole.textContent = currentUser.role;
+    
+    // Sembunyikan Wahana untuk kasir di drawer mobile
+    const mobileWahanaLink = document.querySelector('.mobile-wahana-link');
+    if (mobileWahanaLink && currentUser) {
+        mobileWahanaLink.style.display = currentUser.role === 'admin' ? '' : 'none';
+    }
+};
+
+// Theme toggle untuk mobile (di drawer)
+// Sudah ada di navbar desktop saja
+
+console.log('📱 Mobile drawer aktif!');
