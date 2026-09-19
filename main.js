@@ -735,3 +735,446 @@ function muatSemuaData() {
 }
 
 console.log("✅ Kasir Wahana Modern UI siap!");
+
+// ============================================================
+// 🎁 BONUS: INTERACTIVE PREMIUM FEATURES
+// ============================================================
+
+// ---------- CUSTOM CURSOR ----------
+const cursorDot = document.querySelector('.cursor-dot');
+const cursorOutline = document.querySelector('.cursor-outline');
+
+if (cursorDot && cursorOutline && window.innerWidth > 991) {
+    let mouseX = 0, mouseY = 0;
+    let outlineX = 0, outlineY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursorDot.style.left = mouseX + 'px';
+        cursorDot.style.top = mouseY + 'px';
+    });
+
+    function animateOutline() {
+        outlineX += (mouseX - outlineX) * 0.15;
+        outlineY += (mouseY - outlineY) * 0.15;
+        cursorOutline.style.left = outlineX + 'px';
+        cursorOutline.style.top = outlineY + 'px';
+        requestAnimationFrame(animateOutline);
+    }
+    animateOutline();
+
+    // Hover effect pada elemen interaktif
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target;
+        if (target.matches('button, a, .wahana-item, .qty-btn, .btn-icon, input, select, .nav-link, .quick-btn')) {
+            cursorOutline.classList.add('hovering');
+        }
+    });
+    document.addEventListener('mouseout', (e) => {
+        const target = e.target;
+        if (target.matches('button, a, .wahana-item, .qty-btn, .btn-icon, input, select, .nav-link, .quick-btn')) {
+            cursorOutline.classList.remove('hovering');
+        }
+    });
+}
+
+// ---------- LIVE CLOCK ----------
+const liveTime = document.getElementById('liveTime');
+const liveDate = document.getElementById('liveDate');
+
+function updateClock() {
+    if (!liveTime) return;
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    liveTime.textContent = `${h}:${m}:${s}`;
+    
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    liveDate.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ---------- DARK MODE ----------
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+
+// Load preferensi tema
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    if (themeIcon) {
+        themeIcon.className = 'bi bi-sun-fill';
+        themeToggle.classList.add('dark');
+        themeToggle.dataset.tooltip = 'Mode Terang';
+    }
+}
+
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        if (isDark) {
+            themeIcon.className = 'bi bi-sun-fill';
+            themeToggle.classList.add('dark');
+            themeToggle.dataset.tooltip = 'Mode Terang';
+            localStorage.setItem('theme', 'dark');
+        } else {
+            themeIcon.className = 'bi bi-moon-stars-fill';
+            themeToggle.classList.remove('dark');
+            themeToggle.dataset.tooltip = 'Mode Gelap';
+            localStorage.setItem('theme', 'light');
+        }
+        
+        // Animate
+        document.body.style.transition = 'background 0.5s, color 0.5s';
+    });
+}
+
+// ---------- RIPPLE EFFECT ON BUTTONS ----------
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button, .wahana-item, .quick-btn, .nav-link, .btn-add, .btn-grad');
+    if (!btn) return;
+    
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+    
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    
+    const oldPos = btn.style.position;
+    const oldOverflow = btn.style.overflow;
+    btn.style.position = 'relative';
+    btn.style.overflow = 'hidden';
+    btn.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+        btn.style.position = oldPos;
+        btn.style.overflow = oldOverflow;
+    }, 700);
+});
+
+// ---------- FLOATING NOTIFICATION ----------
+const floatingNotifContainer = document.getElementById('floatingNotifContainer');
+
+function showFloatingNotif(title, msg, icon = 'bi-check-circle-fill') {
+    if (!floatingNotifContainer) return;
+    
+    const notif = document.createElement('div');
+    notif.className = 'floating-notif';
+    notif.innerHTML = `
+        <div class="notif-icon"><i class="bi ${icon}"></i></div>
+        <div class="notif-content">
+            <div class="title">${title}</div>
+            <div class="msg">${msg}</div>
+        </div>
+    `;
+    floatingNotifContainer.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.classList.add('hide');
+        setTimeout(() => notif.remove(), 400);
+    }, 3000);
+}
+
+// ---------- EMOJI RAIN (saat klik wahana) ----------
+function showEmojiRain(emoji, x, y) {
+    if (!x || !y) {
+        x = window.innerWidth / 2;
+        y = window.innerHeight / 2;
+    }
+    
+    for (let i = 0; i < 8; i++) {
+        const el = document.createElement('div');
+        el.className = 'emoji-rain';
+        el.textContent = emoji;
+        el.style.left = (x - 20 + Math.random() * 40) + 'px';
+        el.style.top = y + 'px';
+        el.style.animationDelay = (i * 0.05) + 's';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+    }
+}
+
+// ---------- CONFETTI ----------
+function launchConfetti() {
+    const container = document.getElementById('confettiContainer');
+    if (!container) return;
+    
+    const colors = ['#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b', '#fbbf24'];
+    const shapes = ['■', '●', '▲', '★', '♥'];
+    
+    for (let i = 0; i < 60; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
+        piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+        
+        if (Math.random() > 0.5) {
+            piece.style.borderRadius = '50%';
+        }
+        if (Math.random() > 0.7) {
+            piece.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+            piece.style.background = 'transparent';
+            piece.style.color = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.fontSize = '1.5rem';
+            piece.style.width = piece.style.height = 'auto';
+        }
+        
+        container.appendChild(piece);
+        setTimeout(() => piece.remove(), 4000);
+    }
+}
+
+// ---------- ANIMATED COUNTER ----------
+function animateCounter(el, targetValue, prefix = '', suffix = '') {
+    if (!el) return;
+    
+    // Cek apakah target adalah angka
+    const cleanTarget = typeof targetValue === 'string' 
+        ? parseFloat(targetValue.replace(/[^\d.-]/g, '')) || 0
+        : targetValue;
+    
+    const duration = 800;
+    const startTime = performance.now();
+    const startValue = 0;
+    
+    // Simpan format
+    const formatNumber = typeof targetValue === 'string' && targetValue.includes('Rp');
+    const hasDot = typeof targetValue === 'string' && targetValue.includes('.');
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        
+        const current = startValue + (cleanTarget - startValue) * eased;
+        
+        if (formatNumber) {
+            el.textContent = 'Rp ' + Math.round(current).toLocaleString('id-ID');
+        } else if (hasDot) {
+            el.textContent = current.toFixed(1);
+        } else {
+            el.textContent = Math.round(current).toLocaleString('id-ID');
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            el.textContent = typeof targetValue === 'string' ? targetValue : targetValue.toLocaleString('id-ID');
+        }
+    }
+    
+    el.classList.add('counting');
+    requestAnimationFrame(update);
+    setTimeout(() => el.classList.remove('counting'), duration + 100);
+}
+
+// ---------- WRAP UPDATE STATS untuk animasi counter ----------
+const originalUpdateStats = updateStats;
+window.updateStats = function() {
+    const statWahana = document.getElementById('statWahana');
+    const statTransaksi = document.getElementById('statTransaksi');
+    const statHariIni = document.getElementById('statHariIni');
+    const statPendapatan = document.getElementById('statPendapatan');
+    
+    // Ambil nilai lama
+    const oldWahana = statWahana?.textContent;
+    const oldTransaksi = statTransaksi?.textContent;
+    const oldHariIni = statHariIni?.textContent;
+    const oldPendapatan = statPendapatan?.textContent;
+    
+    // Jalankan update asli
+    originalUpdateStats();
+    
+    // Animasi counter
+    setTimeout(() => {
+        const newWahana = parseInt(statWahana.textContent) || 0;
+        const newTransaksi = parseInt(statTransaksi.textContent) || 0;
+        const newHariIni = parseInt(statHariIni.textContent) || 0;
+        const newPendapatan = statPendapatan.textContent;
+        
+        if (oldWahana !== statWahana.textContent) animateCounter(statWahana, newWahana);
+        if (oldTransaksi !== statTransaksi.textContent) animateCounter(statTransaksi, newTransaksi);
+        if (oldHariIni !== statHariIni.textContent) animateCounter(statHariIni, newHariIni);
+        if (oldPendapatan !== statPendapatan.textContent) {
+            const num = parseInt(newPendapatan.replace(/[^\d]/g, '')) || 0;
+            animateCounter(statPendapatan, 'Rp ' + num.toLocaleString('id-ID'));
+        }
+    }, 50);
+};
+
+// ---------- NOTIF BADGE ----------
+const notifBtn = document.getElementById('notifBtn');
+const notifBadge = document.getElementById('notifBadge');
+
+function updateNotifBadge(count) {
+    if (!notifBadge) return;
+    if (count > 0) {
+        notifBadge.textContent = count > 9 ? '9+' : count;
+        notifBadge.style.display = 'flex';
+    } else {
+        notifBadge.style.display = 'none';
+    }
+}
+
+// Set notif badge = jumlah transaksi hari ini saat load
+setTimeout(() => {
+    const trx = DB.get('transaksi');
+    const todayStr = new Date().toDateString();
+    const todayCount = trx.filter(t => new Date(t.tanggal).toDateString() === todayStr).length;
+    updateNotifBadge(todayCount);
+}, 500);
+
+if (notifBtn) {
+    notifBtn.addEventListener('click', () => {
+        const trx = DB.get('transaksi');
+        const todayStr = new Date().toDateString();
+        const todayTrx = trx.filter(t => new Date(t.tanggal).toDateString() === todayStr);
+        
+        showFloatingNotif(
+            '📊 Ringkasan Hari Ini',
+            `${todayTrx.length} transaksi hari ini`,
+            'bi-graph-up-arrow'
+        );
+        updateNotifBadge(0);
+    });
+}
+
+// ---------- SHARE WHATSAPP ----------
+const btnShareWA = document.getElementById('btnShareWA');
+if (btnShareWA) {
+    btnShareWA.addEventListener('click', () => {
+        // Ambil teks dari struk
+        const strukText = document.querySelector('.struk-box')?.innerText || '';
+        const encoded = encodeURIComponent('*STRUK PEMBAYARAN*\n\n' + strukText + '\n\n_Terima kasih telah berkunjung!_ 🎉');
+        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    });
+}
+
+// ---------- CART PROGRESS BAR ----------
+function updateCartProgress() {
+    const cartProgress = document.getElementById('cartProgress');
+    const cartProgressFill = document.getElementById('cartProgressFill');
+    if (!cartProgress || !cartProgressFill) return;
+    
+    const itemCount = Object.keys(cart).length;
+    const targetItems = 5; // max untuk visualisasi
+    const percent = Math.min((itemCount / targetItems) * 100, 100);
+    
+    if (itemCount === 0) {
+        cartProgress.style.display = 'none';
+    } else {
+        cartProgress.style.display = 'block';
+        cartProgressFill.style.width = percent + '%';
+    }
+}
+
+// Override renderCart untuk update progress
+const originalRenderCart = renderCart;
+window.renderCart = function() {
+    originalRenderCart();
+    updateCartProgress();
+};
+
+// ---------- EMOJI RAIN saat klik wahana ----------
+document.addEventListener('click', (e) => {
+    const item = e.target.closest('.wahana-item');
+    if (item) {
+        const emoji = item.querySelector('.wahana-emoji')?.textContent || '🎪';
+        showEmojiRain(emoji, e.clientX, e.clientY);
+    }
+});
+
+// ---------- CONFETTI setelah transaksi berhasil ----------
+const originalTampilkanStruk = tampilkanStruk;
+window.tampilkanStruk = function(trx) {
+    originalTampilkanStruk(trx);
+    setTimeout(() => {
+        launchConfetti();
+        showFloatingNotif(
+            '✅ Transaksi Berhasil!',
+            `${trx.kode_transaksi} — ${rupiah(trx.total)}`,
+            'bi-check-circle-fill'
+        );
+        // Update notif badge
+        const todayCount = DB.get('transaksi').filter(t => 
+            new Date(t.tanggal).toDateString() === new Date().toDateString()
+        ).length;
+        updateNotifBadge(todayCount);
+    }, 300);
+};
+
+// ---------- SOUND FEEDBACK (Web Audio API) ----------
+function playSound(type = 'click') {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        if (type === 'success') {
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.4);
+        } else if (type === 'click') {
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            gain.gain.setValueAtTime(0.05, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.1);
+        }
+    } catch (e) {
+        // Silent fail if audio not supported
+    }
+}
+
+// Play sound on click (optional - uncomment kalau mau)
+// document.addEventListener('click', (e) => {
+//     if (e.target.closest('button, .wahana-item')) {
+//         playSound('click');
+//     }
+// });
+
+// ---------- SMOOTH PAGE TRANSITIONS ----------
+document.querySelectorAll('.nav-pills-app .nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        document.querySelectorAll('.app-page').forEach(page => {
+            if (!page.classList.contains('d-none')) {
+                page.style.animation = 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            }
+        });
+    });
+});
+
+// ---------- WELCOME MESSAGE ----------
+setTimeout(() => {
+    if (currentUser) {
+        showFloatingNotif(
+            `👋 Halo, ${currentUser.nama}!`,
+            currentUser.role === 'admin' ? 'Selamat bekerja, Admin!' : 'Semangat bekerja hari ini!',
+            'bi-emoji-smile-fill'
+        );
+    }
+}, 1500);
+
+console.log('🎁 Fitur premium interaktif dimuat!');
+console.log('💡 Tips: coba klik wahana, simpan transaksi, atau toggle dark mode!');
