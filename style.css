@@ -2754,3 +2754,384 @@ body.dark-mode .floating-notif .notif-content .title { color: #e2e8f0; }
         font-size: 1.55rem !important;
     }
 }
+
+/* ============================================================
+   📊 LAPORAN TRANSAKSI — CLEAN & RAPI
+   ============================================================ */
+
+/* Toolbar Filter */
+.laporan-filter {
+    background: white;
+    border-radius: 20px;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+.laporan-filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.85rem;
+    align-items: end;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.filter-field label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.filter-field input {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0f172a;
+    transition: all 0.25s;
+}
+
+.filter-field input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.btn-filter {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: white;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    height: 46px;
+}
+
+.btn-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(139, 92, 246, 0.5);
+}
+
+/* Kartu transaksi */
+.laporan-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.25rem;
+}
+
+.trx-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.15rem 1.25rem;
+    border: 1.5px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeInUp 0.4s backwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.trx-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #8b5cf6, #ec4899);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trx-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.12);
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+.trx-card:hover::before {
+    transform: scaleY(1);
+}
+
+/* Header kartu */
+.trx-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px dashed rgba(226, 232, 240, 0.9);
+}
+
+.trx-card-header .kode-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.trx-kode {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #7c3aed;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-bottom: 0.4rem;
+}
+
+.trx-tanggal {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.trx-card-header .trx-total-wrapper {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.trx-total-label {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 0.15rem;
+}
+
+.trx-total-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.8px;
+    white-space: nowrap;
+}
+
+/* Body kartu */
+.trx-card-body {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.trx-kasir-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3);
+    flex-shrink: 0;
+}
+
+.trx-kasir-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.trx-kasir-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #0f172a;
+    margin-bottom: 0.15rem;
+}
+
+.trx-kasir-role {
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.trx-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    flex-shrink: 0;
+}
+
+.trx-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+}
+
+/* Actions */
+.trx-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.trx-btn {
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trx-btn-view {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1));
+    color: #0284c7;
+    border: 1.5px solid rgba(6, 182, 212, 0.2);
+}
+
+.trx-btn-view:hover {
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(6, 182, 212, 0.4);
+}
+
+.trx-btn-delete {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+    color: #dc2626;
+    border: 1.5px solid rgba(239, 68, 68, 0.2);
+}
+
+.trx-btn-delete:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+}
+
+/* Responsive Mobile */
+@media (max-width: 768px) {
+    .laporan-filter {
+        padding: 1rem 1.15rem;
+        border-radius: 18px;
+        margin-bottom: 1.15rem;
+    }
+    
+    .laporan-filter-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.7rem;
+    }
+    
+    .btn-filter {
+        grid-column: 1 / -1;
+        height: 44px;
+        font-size: 0.88rem;
+    }
+    
+    .laporan-list {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+    
+    .trx-card {
+        padding: 1rem;
+        border-radius: 18px;
+    }
+    
+    .trx-kode {
+        font-size: 0.68rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .trx-total-value {
+        font-size: 1.15rem;
+    }
+    
+    .trx-kasir-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 0.78rem;
+    }
+    
+    .trx-btn {
+        padding: 0.7rem 0.85rem;
+        font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .laporan-filter-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .trx-card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+    
+    .trx-card-header .trx-total-wrapper {
+        text-align: left;
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+    
+    .trx-total-label {
+        margin-bottom: 0;
+    }
+}

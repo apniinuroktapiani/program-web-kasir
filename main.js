@@ -1,9 +1,10 @@
-// main.js — Modern UI Version (localStorage)
+// ============================================================
+// KASIR WAHANA — main.js (VERSI BERSIH & LENGKAP)
+// ============================================================
 
-// ============================================================
-// DATABASE HELPER (localStorage)
-// ============================================================
+// ---------- DATABASE (localStorage) ----------
 const DB = {
+    VERSION: "4",
     get(key) {
         return JSON.parse(localStorage.getItem(key) || "[]");
     },
@@ -11,18 +12,27 @@ const DB = {
         localStorage.setItem(key, JSON.stringify(val));
     },
     init() {
-        if (!localStorage.getItem("users")) {
+        const savedVersion = localStorage.getItem("db_version");
+        if (savedVersion !== this.VERSION) {
+            localStorage.removeItem("users");
+            localStorage.removeItem("wahana");
+            localStorage.removeItem("transaksi");
+            localStorage.removeItem("detail_transaksi");
+            localStorage.removeItem("nextId");
+            localStorage.setItem("db_version", this.VERSION);
+        }
+        if (!localStorage.getItem("users") || this.get("users").length === 0) {
             this.set("users", [
                 { id: 1, nama: "Admin Wahana", username: "admin", password: "admin123", role: "admin" },
                 { id: 2, nama: "Rina", username: "rina", password: "rina123", role: "kasir" }
             ]);
         }
-        if (!localStorage.getItem("wahana")) {
+        if (!localStorage.getItem("wahana") || this.get("wahana").length === 0) {
             this.set("wahana", [
-                { id: 1, nama_wahana: "ATV", harga: 50000, status: "aktif", emoji: "🏍️" },
-                { id: 2, nama_wahana: "Kelinci", harga: 10000, status: "aktif", emoji: "🐰" },
-                { id: 3, nama_wahana: "Kuda", harga: 25000, status: "aktif", emoji: "🐴" },
-                { id: 4, nama_wahana: "Paintball", harga: 75000, status: "aktif", emoji: "🎯" }
+                { id: 1, nama_wahana: "ATV", harga: 55000, status: "aktif", emoji: "🏍️" },
+                { id: 2, nama_wahana: "Kelinci", harga: 35000, status: "aktif", emoji: "🐰" },
+                { id: 3, nama_wahana: "Kuda", harga: 50000, status: "aktif", emoji: "🐴" },
+                { id: 4, nama_wahana: "Paintball", harga: 160000, status: "aktif", emoji: "🎯" }
             ]);
         }
         if (!localStorage.getItem("transaksi")) this.set("transaksi", []);
@@ -40,12 +50,14 @@ const DB = {
 };
 DB.init();
 
-// Emoji otomatis berdasarkan nama
+// ---------- EMOJI MAP ----------
 const EMOJI_MAP = {
-    "atv": "🏍️", "kelinci": "🐰", "kuda": "🐴", "paintball": "🎯",
-    "perahu": "⛵", "sepeda": "🚴", "panah": "🏹", "ayunan": "🎠",
-    "kolam": "🏊", "mobil": "🚗", "motor": "🏍️", "kereta": "🚂"
+    atv: "🏍️", kelinci: "🐰", kuda: "🐴", paintball: "🎯",
+    perahu: "⛵", sepeda: "🚴", panah: "🏹", ayunan: "🎠",
+    kolam: "🏊", mobil: "🚗", motor: "🏍️", kereta: "🚂",
+    mewarnai: "🎨", outbound: "🎪"
 };
+
 function getEmoji(nama) {
     const n = (nama || "").toLowerCase();
     for (const k in EMOJI_MAP) {
@@ -54,266 +66,248 @@ function getEmoji(nama) {
     return "🎪";
 }
 
-// ============================================================
-// STATE
-// ============================================================
+// ---------- STATE ----------
 let currentUser = null;
 let cart = {};
 let hapusTarget = { type: null, id: null };
+let searchKeyword = "";
 
-// ============================================================
-// DOM
-// ============================================================
+// ---------- DOM HELPERS ----------
 const $ = (id) => document.getElementById(id);
 
-const loginPage = $("loginPage");
-const appPage = $("appPage");
-const formLogin = $("formLogin");
-const loginUsername = $("loginUsername");
-const loginPassword = $("loginPassword");
-const loginError = $("loginError");
-const loginErrorMsg = $("loginErrorMsg");
-const userNama = $("userNama");
-const userRole = $("userRole");
-const userAvatar = $("userAvatar");
-const btnLogout = $("btnLogout");
-
-const tbodyWahana = $("tbodyWahana");
-const emptyWahana = $("emptyWahana");
-const btnTambahWahana = $("btnTambahWahana");
-const formWahana = $("formWahana");
-const wahanaId = $("wahanaId");
-const wahanaNama = $("wahanaNama");
-const wahanaHarga = $("wahanaHarga");
-const wahanaStatus = $("wahanaStatus");
-const modalWahanaTitle = $("modalWahanaTitle");
-const btnSimpanWahana = $("btnSimpanWahana");
-
-const modalHapus = new bootstrap.Modal($("modalHapus"));
-const hapusPesan = $("hapusPesan");
-const btnKonfirmasiHapus = $("btnKonfirmasiHapus");
-
-const wahanaGrid = $("wahanaGrid");
-const emptyWahanaKasir = $("emptyWahanaKasir");
-const cartList = $("cartList");
-const cartTotal = $("cartTotal");
-const cartKembalian = $("cartKembalian");
-const inputBayar = $("inputBayar");
-const btnSimpanTransaksi = $("btnSimpanTransaksi");
-const badgeJumlahItem = $("badgeJumlahItem");
-const badgeJumlahWahana = $("badgeJumlahWahana");
-
-const filterDari = $("filterDari");
-const filterSampai = $("filterSampai");
-const btnFilter = $("btnFilter");
-const tbodyLaporan = $("tbodyLaporan");
-const emptyLaporan = $("emptyLaporan");
-const lapJumlah = $("lapJumlah");
-const lapPendapatan = $("lapPendapatan");
-
-const modalStruk = new bootstrap.Modal($("modalStruk"));
-const strukBody = $("strukBody");
-
-const toastEl = $("liveToast");
-const toastMessage = $("toastMessage");
-const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
-
-// ============================================================
-// UTIL
-// ============================================================
 function escapeHtml(t) {
     const d = document.createElement("div");
-    d.textContent = t;
+    d.textContent = t == null ? "" : t;
     return d.innerHTML;
 }
+
 function rupiah(n) {
     return "Rp " + Number(n || 0).toLocaleString("id-ID");
 }
-function showToast(msg, type = "success") {
-    const bg = { success: "bg-success", danger: "bg-danger", warning: "bg-warning text-dark", info: "bg-info text-dark" };
-    toastEl.className = `toast align-items-center text-white border-0 ${bg[type] || "bg-primary"}`;
-    toastMessage.innerHTML = msg;
-    toast.show();
+
+function getInitials(nama) {
+    return (nama || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
-function generateKode() {
-    const n = new Date();
-    const p = (x) => String(x).padStart(2, "0");
-    return `TRX-${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}-${Math.floor(100 + Math.random() * 900)}`;
-}
+
 function formatTanggal(iso) {
     if (!iso) return "-";
     const d = new Date(iso);
     return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) +
         " " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 }
-function getInitials(nama) {
-    return (nama || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+function generateKode() {
+    const n = new Date();
+    const p = (x) => String(x).padStart(2, "0");
+    return `TRX-${n.getFullYear()}${p(n.getMonth() + 1)}${p(n.getDate())}${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}-${Math.floor(100 + Math.random() * 900)}`;
+}
+
+function showToast(msg, type = "success") {
+    const toastEl = $("liveToast");
+    const toastMessage = $("toastMessage");
+    if (!toastEl || !toastMessage) return;
+    const bg = { success: "bg-success", danger: "bg-danger", warning: "bg-warning text-dark", info: "bg-info text-dark" };
+    toastEl.className = `toast align-items-center text-white border-0 ${bg[type] || "bg-primary"}`;
+    toastMessage.innerHTML = msg;
+    const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 2500 });
+    toast.show();
 }
 
 // ============================================================
 // LOGIN
 // ============================================================
-formLogin.addEventListener("submit", (e) => {
-    e.preventDefault();
-    loginError.classList.add("d-none");
-
-    const username = loginUsername.value.trim();
-    const password = loginPassword.value;
-
-    if (!username || !password) {
-        loginErrorMsg.textContent = "Username dan password wajib diisi!";
-        loginError.classList.remove("d-none");
-        return;
-    }
-
-    const users = DB.get("users");
-    const user = users.find(u => u.username === username);
-
-    if (!user) {
-        loginErrorMsg.textContent = "Username tidak ditemukan!";
-        loginError.classList.remove("d-none");
-        return;
-    }
-    if (user.password !== password) {
-        loginErrorMsg.textContent = "Password salah!";
-        loginError.classList.remove("d-none");
-        return;
-    }
-
-    currentUser = user;
-    sessionStorage.setItem("kasirUser", JSON.stringify(currentUser));
-    loginSuccess();
-    showToast(`<i class="bi bi-check-circle-fill me-1"></i> Selamat datang, ${escapeHtml(user.nama)}!`, "success");
-});
-
 function loginSuccess() {
-    loginPage.classList.add("d-none");
-    appPage.classList.remove("d-none");
-    userNama.textContent = currentUser.nama;
-    userRole.textContent = currentUser.role;
-    userAvatar.textContent = getInitials(currentUser.nama);
+    $("loginPage").classList.add("d-none");
+    $("appPage").classList.remove("d-none");
 
-    // Sembunyikan menu Wahana untuk kasir
-    document.querySelectorAll(".nav-wahana-link")
+    $("userNama").textContent = currentUser.nama;
+    $("userRole").textContent = currentUser.role;
+    $("userAvatar").textContent = getInitials(currentUser.nama);
+
+    // Mobile drawer info
+    const mobAvatar = $("mobileAvatar");
+    const mobNama = $("mobileUserNama");
+    const mobRole = $("mobileUserRole");
+    if (mobAvatar) mobAvatar.textContent = getInitials(currentUser.nama);
+    if (mobNama) mobNama.textContent = currentUser.nama;
+    if (mobRole) mobRole.textContent = currentUser.role;
+
+    // Sembunyikan Wahana untuk kasir
+    document.querySelectorAll(".nav-wahana-link, .mobile-wahana-link")
         .forEach(el => el.style.display = currentUser.role === "admin" ? "" : "none");
 
     navigateTo("dashboard");
     muatSemuaData();
 }
 
-const savedUser = sessionStorage.getItem("kasirUser");
-if (savedUser) {
-    try {
-        currentUser = JSON.parse(savedUser);
+function initLogin() {
+    const formLogin = $("formLogin");
+    const loginError = $("loginError");
+    const loginErrorMsg = $("loginErrorMsg");
+
+    formLogin.addEventListener("submit", (e) => {
+        e.preventDefault();
+        loginError.classList.add("d-none");
+
+        const username = $("loginUsername").value.trim();
+        const password = $("loginPassword").value;
+
+        if (!username || !password) {
+            loginErrorMsg.textContent = "Username dan password wajib diisi!";
+            loginError.classList.remove("d-none");
+            return;
+        }
+
+        const users = DB.get("users");
+        const user = users.find(u => u.username === username);
+
+        if (!user) {
+            loginErrorMsg.textContent = "Username tidak ditemukan!";
+            loginError.classList.remove("d-none");
+            return;
+        }
+        if (user.password !== password) {
+            loginErrorMsg.textContent = "Password salah!";
+            loginError.classList.remove("d-none");
+            return;
+        }
+
+        currentUser = user;
+        sessionStorage.setItem("kasirUser", JSON.stringify(currentUser));
         loginSuccess();
-    } catch (e) { sessionStorage.removeItem("kasirUser"); }
+        showToast(`<i class="bi bi-check-circle-fill me-1"></i> Selamat datang, ${escapeHtml(user.nama)}!`);
+    });
+
+    // Auto login
+    const savedUser = sessionStorage.getItem("kasirUser");
+    if (savedUser) {
+        try {
+            currentUser = JSON.parse(savedUser);
+            loginSuccess();
+        } catch (e) {
+            sessionStorage.removeItem("kasirUser");
+        }
+    }
 }
 
-// ============================================================
-// LOGOUT
-// ============================================================
-btnLogout.addEventListener("click", () => {
-    if (!confirm("Yakin ingin logout?")) return;
-    sessionStorage.removeItem("kasirUser");
-    currentUser = null;
-    cart = {};
-    appPage.classList.add("d-none");
-    loginPage.classList.remove("d-none");
-    formLogin.reset();
-    loginError.classList.add("d-none");
-    showToast("<i class='bi bi-box-arrow-right me-1'></i> Anda telah logout.", "info");
-});
+function initLogout() {
+    const btn = $("btnLogout");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+        if (!confirm("Yakin ingin logout?")) return;
+        sessionStorage.removeItem("kasirUser");
+        currentUser = null;
+        cart = {};
+        $("appPage").classList.add("d-none");
+        $("loginPage").classList.remove("d-none");
+        $("formLogin").reset();
+        $("loginError").classList.add("d-none");
+        showToast("<i class='bi bi-box-arrow-right me-1'></i> Anda telah logout.", "info");
+    });
+}
 
 // ============================================================
 // NAVIGASI
 // ============================================================
 function navigateTo(page) {
     document.querySelectorAll(".app-page").forEach(el => el.classList.add("d-none"));
-    $("page-" + page).classList.remove("d-none");
-    document.querySelectorAll(".navbar-nav .nav-link").forEach(a => {
+    const target = $("page-" + page);
+    if (target) target.classList.remove("d-none");
+
+    document.querySelectorAll(".navbar-nav .nav-link, .nav-pills-app .nav-link").forEach(a => {
         a.classList.toggle("active", a.dataset.page === page);
     });
+
     if (page === "laporan") muatLaporan();
     if (page === "kasir") renderKasirGrid();
     if (page === "wahana") renderWahana();
 }
 
-document.querySelectorAll(".navbar-nav .nav-link").forEach(a => {
-    a.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (a.dataset.page) {
-            navigateTo(a.dataset.page);
-            // Tutup menu mobile setelah klik
-            const navMenu = $("navMenu");
-            if (navMenu.classList.contains("show")) {
-                bootstrap.Collapse.getInstance(navMenu)?.hide();
-            }
-        }
+function initNavigation() {
+    document.querySelectorAll(".nav-pills-app .nav-link").forEach(a => {
+        a.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (a.dataset.page) navigateTo(a.dataset.page);
+        });
     });
-});
-document.querySelectorAll(".btn-goto").forEach(btn => {
-    btn.addEventListener("click", () => navigateTo(btn.dataset.page));
-});
+    document.querySelectorAll(".btn-goto").forEach(btn => {
+        btn.addEventListener("click", () => navigateTo(btn.dataset.page));
+    });
+}
 
 // ============================================================
-// WAHANA - READ
+// WAHANA — CRUD
 // ============================================================
 function renderWahana() {
-    const list = DB.get("wahana");
-    tbodyWahana.innerHTML = "";
+    let list = DB.get("wahana");
+    if (searchKeyword) {
+        list = list.filter(w => w.nama_wahana.toLowerCase().includes(searchKeyword.toLowerCase()));
+    }
+
+    const container = $("wahanaList");
+    const emptyWahana = $("emptyWahana");
+    const jumlahWahanaText = $("jumlahWahanaText");
+    if (!container) return;
+
+    const total = DB.get("wahana").length;
+    const aktif = DB.get("wahana").filter(w => w.status === "aktif").length;
+    if (jumlahWahanaText) jumlahWahanaText.textContent = `${total} Wahana · ${aktif} Aktif`;
+
+    container.innerHTML = "";
 
     if (list.length === 0) {
-        emptyWahana.classList.remove("d-none");
+        if (emptyWahana) emptyWahana.classList.remove("d-none");
         return;
     }
-    emptyWahana.classList.add("d-none");
+    if (emptyWahana) emptyWahana.classList.add("d-none");
 
     list.forEach((w, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><strong>${i + 1}</strong></td>
-            <td>
-                <div style="display:flex;align-items:center;gap:.6rem;">
-                    <span style="font-size:1.5rem;">${w.emoji || getEmoji(w.nama_wahana)}</span>
-                    <span style="font-weight:700;">${escapeHtml(w.nama_wahana)}</span>
-                </div>
-            </td>
-            <td style="font-weight:700;color:var(--primary);">${rupiah(w.harga)}</td>
-            <td><span class="badge-status ${w.status}">${w.status}</span></td>
-            <td class="text-center">
-                <button class="btn-action edit me-1 btn-edit-wahana" data-id="${w.id}" title="Edit">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
-                <button class="btn-action delete btn-hapus-wahana" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}" title="Hapus">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-            </td>
+        const card = document.createElement("div");
+        card.className = "wahana-card";
+        card.style.animationDelay = `${Math.min(i * 0.04, 0.3)}s`;
+        card.innerHTML = `
+            <div class="wahana-number">${i + 1}</div>
+            <div class="wahana-card-emoji">${w.emoji || getEmoji(w.nama_wahana)}</div>
+            <h5 class="wahana-card-name">${escapeHtml(w.nama_wahana)}</h5>
+            <div class="wahana-card-price">${rupiah(w.harga)}</div>
+            <div class="wahana-card-info">
+                <span class="wahana-card-status ${w.status}">${w.status === 'aktif' ? 'Aktif' : 'Nonaktif'}</span>
+            </div>
+            <div class="wahana-card-actions">
+                <button class="btn-edit-card" data-id="${w.id}"><i class="bi bi-pencil-fill"></i> Edit</button>
+                <button class="btn-delete-card" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}"><i class="bi bi-trash-fill"></i> Hapus</button>
+            </div>
         `;
-        tbodyWahana.appendChild(tr);
+        container.appendChild(card);
     });
 
-    document.querySelectorAll(".btn-edit-wahana").forEach(btn => {
+    container.querySelectorAll(".btn-edit-card").forEach(btn => {
         btn.addEventListener("click", () => bukaModalWahana(Number(btn.dataset.id)));
     });
-    document.querySelectorAll(".btn-hapus-wahana").forEach(btn => {
+    container.querySelectorAll(".btn-delete-card").forEach(btn => {
         btn.addEventListener("click", () => {
             konfirmasiHapus("wahana", Number(btn.dataset.id), btn.dataset.nama);
         });
     });
 }
 
-// ============================================================
-// WAHANA - CREATE / UPDATE
-// ============================================================
 function bukaModalWahana(id = null) {
+    const formWahana = $("formWahana");
+    const wahanaId = $("wahanaId");
+    const wahanaNama = $("wahanaNama");
+    const wahanaHarga = $("wahanaHarga");
+    const wahanaStatus = $("wahanaStatus");
+    const modalWahanaTitle = $("modalWahanaTitle");
+    const btnSimpanWahana = $("btnSimpanWahana");
+
     formWahana.reset();
+    formWahana.classList.remove("was-validated");
     wahanaId.value = "";
 
     if (id) {
         modalWahanaTitle.innerHTML = '<i class="bi bi-pencil-fill"></i> Edit Wahana';
         btnSimpanWahana.innerHTML = '<i class="bi bi-check-lg"></i> Perbarui';
-        const list = DB.get("wahana");
-        const w = list.find(x => x.id === id);
+        const w = DB.get("wahana").find(x => x.id === id);
         if (w) {
             wahanaId.value = w.id;
             wahanaNama.value = w.nama_wahana;
@@ -324,119 +318,130 @@ function bukaModalWahana(id = null) {
         modalWahanaTitle.innerHTML = '<i class="bi bi-plus-circle-fill"></i> Tambah Wahana';
         btnSimpanWahana.innerHTML = '<i class="bi bi-check-lg"></i> Simpan';
     }
-    new bootstrap.Modal($("modalWahana")).show();
+    bootstrap.Modal.getOrCreateInstance($("modalWahana")).show();
 }
 
-btnTambahWahana.addEventListener("click", () => bukaModalWahana(null));
+function initWahana() {
+    const btnTambah = $("btnTambahWahana");
+    if (btnTambah) btnTambah.addEventListener("click", () => bukaModalWahana(null));
 
-formWahana.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = wahanaId.value ? Number(wahanaId.value) : null;
-    const nama = wahanaNama.value.trim();
-    const harga = parseFloat(wahanaHarga.value) || 0;
+    const formWahana = $("formWahana");
+    if (!formWahana) return;
 
-    if (!nama || harga <= 0) {
-        showToast("Semua field wajib diisi dengan benar!", "warning");
-        return;
-    }
+    formWahana.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const id = $("wahanaId").value ? Number($("wahanaId").value) : null;
+        const nama = $("wahanaNama").value.trim();
+        const harga = parseFloat($("wahanaHarga").value) || 0;
 
-    const data = {
-        nama_wahana: nama,
-        harga: harga,
-        status: wahanaStatus.value,
-        emoji: getEmoji(nama)
-    };
+        if (!nama || harga <= 0) {
+            showToast("Semua field wajib diisi dengan benar!", "warning");
+            return;
+        }
 
-    const list = DB.get("wahana");
-    if (id) {
-        const idx = list.findIndex(x => x.id === id);
-        if (idx >= 0) list[idx] = { ...list[idx], ...data };
-        showToast('<i class="bi bi-check-circle-fill me-1"></i> Wahana diperbarui!', "success");
-    } else {
-        const newId = DB.nextId("wahana");
-        list.push({ id: newId, ...data });
-        showToast('<i class="bi bi-check-circle-fill me-1"></i> Wahana ditambahkan!', "success");
-    }
-    DB.set("wahana", list);
+        const data = {
+            nama_wahana: nama,
+            harga: harga,
+            status: $("wahanaStatus").value,
+            emoji: getEmoji(nama)
+        };
 
-    bootstrap.Modal.getInstance($("modalWahana")).hide();
-    renderWahana();
-    updateStats();
-});
+        const list = DB.get("wahana");
+        if (id) {
+            const idx = list.findIndex(x => x.id === id);
+            if (idx >= 0) list[idx] = { ...list[idx], ...data };
+            showToast('<i class="bi bi-check-circle-fill me-1"></i> Wahana diperbarui!');
+        } else {
+            list.push({ id: DB.nextId("wahana"), ...data });
+            showToast('<i class="bi bi-check-circle-fill me-1"></i> Wahana ditambahkan!');
+        }
+        DB.set("wahana", list);
+        bootstrap.Modal.getInstance($("modalWahana")).hide();
+        renderWahana();
+        updateStats();
+    });
+
+    // Search
+    document.addEventListener("input", (e) => {
+        if (e.target.id === "searchWahana") {
+            searchKeyword = e.target.value.trim();
+            renderWahana();
+        }
+    });
+}
 
 // ============================================================
-// WAHANA - DELETE
+// KONFIRMASI HAPUS
 // ============================================================
 function konfirmasiHapus(type, id, nama) {
     hapusTarget = { type, id };
+    const hapusPesan = $("hapusPesan");
     if (type === "wahana") {
-        hapusPesan.innerHTML = `Yakin ingin menghapus wahana <strong>${escapeHtml(nama)}</strong>?<br><small class="text-muted">Tindakan ini tidak dapat dibatalkan.</small>`;
-    } else if (type === "transaksi") {
-        hapusPesan.innerHTML = `Yakin ingin menghapus transaksi <strong>${escapeHtml(nama)}</strong>?<br><small class="text-muted">Tindakan ini tidak dapat dibatalkan.</small>`;
+        hapusPesan.innerHTML = `Yakin ingin menghapus wahana <strong>${escapeHtml(nama)}</strong>?<br><small class="text-muted">Tidak dapat dibatalkan.</small>`;
+    } else {
+        hapusPesan.innerHTML = `Yakin ingin menghapus transaksi <strong>${escapeHtml(nama)}</strong>?<br><small class="text-muted">Tidak dapat dibatalkan.</small>`;
     }
-    modalHapus.show();
+    bootstrap.Modal.getOrCreateInstance($("modalHapus")).show();
 }
 
-btnKonfirmasiHapus.addEventListener("click", () => {
-    if (!hapusTarget.id) return;
+function initKonfirmasiHapus() {
+    const btn = $("btnKonfirmasiHapus");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+        if (!hapusTarget.id) return;
 
-    if (hapusTarget.type === "wahana") {
-        const detail = DB.get("detail_transaksi");
-        const dipakai = detail.some(d => d.wahana_id === hapusTarget.id);
-        if (dipakai) {
-            showToast("Wahana sudah dipakai di transaksi, tidak bisa dihapus!", "danger");
-            modalHapus.hide();
-            return;
+        if (hapusTarget.type === "wahana") {
+            const detail = DB.get("detail_transaksi");
+            if (detail.some(d => d.wahana_id === hapusTarget.id)) {
+                showToast("Wahana sudah dipakai di transaksi, tidak bisa dihapus!", "danger");
+                bootstrap.Modal.getInstance($("modalHapus")).hide();
+                return;
+            }
+            DB.set("wahana", DB.get("wahana").filter(w => w.id !== hapusTarget.id));
+            showToast('<i class="bi bi-trash-fill me-1"></i> Wahana dihapus!');
+            renderWahana();
+            updateStats();
+        } else {
+            DB.set("detail_transaksi", DB.get("detail_transaksi").filter(d => d.transaksi_id !== hapusTarget.id));
+            DB.set("transaksi", DB.get("transaksi").filter(t => t.id !== hapusTarget.id));
+            showToast('<i class="bi bi-trash-fill me-1"></i> Transaksi dihapus!');
+            muatLaporan();
+            updateStats();
         }
-        let list = DB.get("wahana");
-        list = list.filter(w => w.id !== hapusTarget.id);
-        DB.set("wahana", list);
-        showToast('<i class="bi bi-trash-fill me-1"></i> Wahana dihapus!', "success");
-        renderWahana();
-        updateStats();
-    } else if (hapusTarget.type === "transaksi") {
-        let detail = DB.get("detail_transaksi").filter(d => d.transaksi_id !== hapusTarget.id);
-        DB.set("detail_transaksi", detail);
-        let trx = DB.get("transaksi").filter(t => t.id !== hapusTarget.id);
-        DB.set("transaksi", trx);
-        showToast('<i class="bi bi-trash-fill me-1"></i> Transaksi dihapus!', "success");
-        muatLaporan();
-        updateStats();
-    }
-
-    modalHapus.hide();
-    hapusTarget = { type: null, id: null };
-});
+        bootstrap.Modal.getInstance($("modalHapus")).hide();
+        hapusTarget = { type: null, id: null };
+    });
+}
 
 // ============================================================
 // KASIR
 // ============================================================
 function renderKasirGrid() {
     const list = DB.get("wahana").filter(w => w.status === "aktif");
-    wahanaGrid.innerHTML = "";
-    badgeJumlahWahana.textContent = `${list.length} tersedia`;
+    const grid = $("wahanaGrid");
+    const emptyKasir = $("emptyWahanaKasir");
+    const badge = $("badgeJumlahWahana");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+    if (badge) badge.textContent = `${list.length} tersedia`;
 
     if (list.length === 0) {
-        emptyWahanaKasir.classList.remove("d-none");
+        if (emptyKasir) emptyKasir.classList.remove("d-none");
         return;
     }
-    emptyWahanaKasir.classList.add("d-none");
+    if (emptyKasir) emptyKasir.classList.add("d-none");
 
     list.forEach(w => {
         const div = document.createElement("div");
         div.className = "wahana-item";
-        div.dataset.id = w.id;
-        div.dataset.nama = w.nama_wahana;
-        div.dataset.harga = w.harga;
         div.innerHTML = `
             <span class="wahana-emoji">${w.emoji || getEmoji(w.nama_wahana)}</span>
             <div class="wahana-name">${escapeHtml(w.nama_wahana)}</div>
             <div class="wahana-price">${rupiah(w.harga)}</div>
         `;
-        div.addEventListener("click", () => {
-            tambahItem(w.id, w.nama_wahana, w.harga);
-        });
-        wahanaGrid.appendChild(div);
+        div.addEventListener("click", () => tambahItem(w.id, w.nama_wahana, w.harga));
+        grid.appendChild(div);
     });
 }
 
@@ -444,7 +449,6 @@ function tambahItem(id, nama, harga) {
     if (cart[id]) cart[id].jumlah++;
     else cart[id] = { id, nama, harga, jumlah: 1 };
     renderCart();
-    showToast(`<i class="bi bi-plus-circle-fill me-1"></i> ${escapeHtml(nama)} ditambahkan`, "success");
 }
 function kurangiItem(id) {
     if (!cart[id]) return;
@@ -458,19 +462,26 @@ function hapusItem(id) {
 }
 function hitungTotalCart() {
     let t = 0;
-    Object.values(cart).forEach(it => { t += it.harga * it.jumlah; });
+    Object.values(cart).forEach(it => t += it.harga * it.jumlah);
     return t;
 }
 
 function renderCart() {
     const keys = Object.keys(cart);
-    badgeJumlahItem.textContent = `${keys.length} item`;
+    const cartList = $("cartList");
+    const badgeItem = $("badgeJumlahItem");
+    const cartTotal = $("cartTotal");
+    const cartKembalian = $("cartKembalian");
+    if (!cartList) return;
+
+    if (badgeItem) badgeItem.textContent = `${keys.length} item`;
 
     if (keys.length === 0) {
         cartList.innerHTML = `
             <div class="cart-empty">
-                <i class="bi bi-cart-x"></i>
-                <p>Keranjang masih kosong<br><small>Klik wahana untuk menambahkan</small></p>
+                <div class="empty-icon-cart">🛒</div>
+                <p>Keranjang masih kosong</p>
+                <small>Klik wahana untuk menambahkan</small>
             </div>`;
         cartTotal.textContent = "Rp 0";
         cartKembalian.textContent = "Rp 0";
@@ -513,75 +524,19 @@ function renderCart() {
     hitungKembalian();
 }
 
-inputBayar.addEventListener("input", hitungKembalian);
 function hitungKembalian() {
+    const inputBayar = $("inputBayar");
+    const cartKembalian = $("cartKembalian");
+    if (!inputBayar || !cartKembalian) return;
     const bayar = parseFloat(inputBayar.value) || 0;
     const kembali = bayar - hitungTotalCart();
     cartKembalian.textContent = rupiah(kembali >= 0 ? kembali : 0);
 }
 
-btnSimpanTransaksi.addEventListener("click", () => {
-    const keys = Object.keys(cart);
-    if (keys.length === 0) {
-        showToast("Keranjang masih kosong!", "warning");
-        return;
-    }
-
-    const total = hitungTotalCart();
-    const bayar = parseFloat(inputBayar.value) || 0;
-    if (bayar < total) {
-        showToast("Uang bayar kurang dari total!", "danger");
-        return;
-    }
-
-    const kembalian = bayar - total;
-    const kode = generateKode();
-    const trxId = DB.nextId("transaksi");
-
-    const trxList = DB.get("transaksi");
-    trxList.push({
-        id: trxId,
-        kode_transaksi: kode,
-        user_id: currentUser.id,
-        nama_kasir: currentUser.nama,
-        tanggal: new Date().toISOString(),
-        total, bayar, kembalian
-    });
-    DB.set("transaksi", trxList);
-
-    const detailList = DB.get("detail_transaksi");
-    Object.values(cart).forEach(it => {
-        detailList.push({
-            id: DB.nextId("detail"),
-            transaksi_id: trxId,
-            wahana_id: it.id,
-            nama_wahana: it.nama,
-            jumlah: it.jumlah,
-            harga: it.harga,
-            subtotal: it.harga * it.jumlah
-        });
-    });
-    DB.set("detail_transaksi", detailList);
-
-    tampilkanStruk({
-        kode_transaksi: kode,
-        nama_kasir: currentUser.nama,
-        tanggal: new Date().toISOString(),
-        total, bayar, kembalian,
-        items: Object.values(cart)
-    });
-
-    cart = {};
-    inputBayar.value = "";
-    renderCart();
-    showToast('<i class="bi bi-check-circle-fill me-1"></i> Transaksi disimpan!', "success");
-    updateStats();
-});
-
-// ============================================================
-// STRUK
-// ============================================================
 function tampilkanStruk(trx) {
+    const strukBody = $("strukBody");
+    if (!strukBody) return;
+
     let itemHtml = "";
     trx.items.forEach(it => {
         itemHtml += `
@@ -597,7 +552,7 @@ function tampilkanStruk(trx) {
     strukBody.innerHTML = `
         <div class="struk-box">
             <div class="struk-header">
-                <div style="font-size:2rem;">🎪</div>
+                <span class="emoji-logo">🎪</span>
                 <h5>KASIR WAHANA</h5>
                 <small>Tiket Wahana Rekreasi</small>
             </div>
@@ -620,13 +575,88 @@ function tampilkanStruk(trx) {
             </div>
         </div>
     `;
-    modalStruk.show();
+    bootstrap.Modal.getOrCreateInstance($("modalStruk")).show();
+}
+
+function initKasir() {
+    const inputBayar = $("inputBayar");
+    if (inputBayar) inputBayar.addEventListener("input", hitungKembalian);
+
+    const btnSimpan = $("btnSimpanTransaksi");
+    if (!btnSimpan) return;
+
+    btnSimpan.addEventListener("click", () => {
+        const keys = Object.keys(cart);
+        if (keys.length === 0) {
+            showToast("Keranjang masih kosong!", "warning");
+            return;
+        }
+
+        const total = hitungTotalCart();
+        const bayar = parseFloat($("inputBayar").value) || 0;
+        if (bayar < total) {
+            showToast("Uang bayar kurang dari total!", "danger");
+            return;
+        }
+
+        const kembalian = bayar - total;
+        const kode = generateKode();
+        const trxId = DB.nextId("transaksi");
+
+        const trxList = DB.get("transaksi");
+        trxList.push({
+            id: trxId,
+            kode_transaksi: kode,
+            user_id: currentUser.id,
+            nama_kasir: currentUser.nama,
+            tanggal: new Date().toISOString(),
+            total, bayar, kembalian
+        });
+        DB.set("transaksi", trxList);
+
+        const detailList = DB.get("detail_transaksi");
+        Object.values(cart).forEach(it => {
+            detailList.push({
+                id: DB.nextId("detail"),
+                transaksi_id: trxId,
+                wahana_id: it.id,
+                nama_wahana: it.nama,
+                jumlah: it.jumlah,
+                harga: it.harga,
+                subtotal: it.harga * it.jumlah
+            });
+        });
+        DB.set("detail_transaksi", detailList);
+
+        tampilkanStruk({
+            kode_transaksi: kode,
+            nama_kasir: currentUser.nama,
+            tanggal: new Date().toISOString(),
+            total, bayar, kembalian,
+            items: Object.values(cart)
+        });
+
+        cart = {};
+        $("inputBayar").value = "";
+        renderCart();
+        showToast('<i class="bi bi-check-circle-fill me-1"></i> Transaksi disimpan!');
+        updateStats();
+    });
 }
 
 // ============================================================
 // LAPORAN
 // ============================================================
 function muatLaporan() {
+    const filterDari = $("filterDari");
+    const filterSampai = $("filterSampai");
+    const container = $("laporanList");
+    const emptyLaporan = $("emptyLaporan");
+    const lapJumlah = $("lapJumlah");
+    const lapPendapatan = $("lapPendapatan");
+    const lapJumlahBadge = $("lapJumlahBadge");
+    if (!container) return;
+
     if (!filterDari.value) {
         const d = new Date();
         d.setDate(1);
@@ -639,625 +669,196 @@ function muatLaporan() {
     const dari = new Date(filterDari.value + "T00:00:00");
     const sampai = new Date(filterSampai.value + "T23:59:59");
 
-    const list = DB.get("transaksi");
-    const rows = list.filter(t => {
+    const rows = DB.get("transaksi").filter(t => {
         const tgl = new Date(t.tanggal);
         return tgl >= dari && tgl <= sampai;
     }).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-    tbodyLaporan.innerHTML = "";
+    container.innerHTML = "";
+
     if (rows.length === 0) {
-        emptyLaporan.classList.remove("d-none");
+        if (emptyLaporan) emptyLaporan.classList.remove("d-none");
         lapJumlah.textContent = "0";
         lapPendapatan.textContent = "Rp 0";
+        if (lapJumlahBadge) lapJumlahBadge.textContent = "0 transaksi";
         return;
     }
-    emptyLaporan.classList.add("d-none");
+    if (emptyLaporan) emptyLaporan.classList.add("d-none");
 
     let totalPendapatan = 0;
-    rows.forEach((r, i) => {
-        totalPendapatan += r.total || 0;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><strong>${i + 1}</strong></td>
-            <td><span style="font-family:'JetBrains Mono',monospace;font-size:.82rem;background:rgba(99,102,241,.08);padding:.25rem .55rem;border-radius:6px;">${escapeHtml(r.kode_transaksi)}</span></td>
-            <td>${formatTanggal(r.tanggal)}</td>
-            <td>${escapeHtml(r.nama_kasir || "-")}</td>
-            <td style="font-weight:700;color:var(--primary);">${rupiah(r.total)}</td>
-            <td class="text-center">
-                <button class="btn-action view me-1 btn-lihat-struk" data-id="${r.id}" title="Lihat Struk">
-                    <i class="bi bi-receipt"></i>
-                </button>
-                <button class="btn-action delete btn-hapus-trx" data-id="${r.id}" data-kode="${escapeHtml(r.kode_transaksi)}" title="Hapus">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-            </td>
-        `;
-        tbodyLaporan.appendChild(tr);
-    });
+    rows.forEach(r => totalPendapatan += r.total || 0);
 
     lapJumlah.textContent = rows.length;
     lapPendapatan.textContent = rupiah(totalPendapatan);
+    if (lapJumlahBadge) lapJumlahBadge.textContent = `${rows.length} transaksi`;
 
-    document.querySelectorAll(".btn-lihat-struk").forEach(btn => {
+    rows.forEach((r, i) => {
+        const card = document.createElement("div");
+        card.className = "trx-card";
+        card.style.animationDelay = `${Math.min(i * 0.04, 0.3)}s`;
+        card.innerHTML = `
+            <div class="trx-card-header">
+                <div class="kode-wrapper">
+                    <div class="trx-kode">${escapeHtml(r.kode_transaksi)}</div>
+                    <div class="trx-tanggal">🕐 ${formatTanggal(r.tanggal)}</div>
+                </div>
+                <div class="trx-total-wrapper">
+                    <div class="trx-total-label">Total</div>
+                    <div class="trx-total-value">${rupiah(r.total)}</div>
+                </div>
+            </div>
+            <div class="trx-card-body">
+                <div class="trx-kasir-avatar">${getInitials(r.nama_kasir)}</div>
+                <div class="trx-kasir-info">
+                    <div class="trx-kasir-name">${escapeHtml(r.nama_kasir || "-")}</div>
+                    <div class="trx-kasir-role">Kasir</div>
+                </div>
+                <div class="trx-badge">Berhasil</div>
+            </div>
+            <div class="trx-card-actions">
+                <button class="trx-btn trx-btn-view" data-id="${r.id}">👁️ Lihat Struk</button>
+                <button class="trx-btn trx-btn-delete" data-id="${r.id}" data-kode="${escapeHtml(r.kode_transaksi)}">🗑️ Hapus</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    container.querySelectorAll(".trx-btn-view").forEach(btn => {
         btn.addEventListener("click", () => lihatStrukLama(Number(btn.dataset.id)));
     });
-    document.querySelectorAll(".btn-hapus-trx").forEach(btn => {
-        btn.addEventListener("click", () => {
-            konfirmasiHapus("transaksi", Number(btn.dataset.id), btn.dataset.kode);
-        });
+    container.querySelectorAll(".trx-btn-delete").forEach(btn => {
+        btn.addEventListener("click", () => konfirmasiHapus("transaksi", Number(btn.dataset.id), btn.dataset.kode));
     });
 }
 
 function lihatStrukLama(trxId) {
     const trx = DB.get("transaksi").find(t => t.id === trxId);
     if (!trx) return;
-    const detail = DB.get("detail_transaksi").filter(d => d.transaksi_id === trxId);
-    const items = detail.map(d => ({
-        nama: d.nama_wahana,
-        harga: d.harga,
-        jumlah: d.jumlah
-    }));
+    const items = DB.get("detail_transaksi")
+        .filter(d => d.transaksi_id === trxId)
+        .map(d => ({ nama: d.nama_wahana, harga: d.harga, jumlah: d.jumlah }));
     tampilkanStruk({ ...trx, items });
 }
 
-btnFilter.addEventListener("click", muatLaporan);
+function initLaporan() {
+    const btnFilter = $("btnFilter");
+    if (btnFilter) btnFilter.addEventListener("click", muatLaporan);
+}
 
 // ============================================================
-// STATISTIK
+// STATISTIK DASHBOARD
 // ============================================================
 function updateStats() {
-    const wahana = DB.get("wahana");
-    const aktif = wahana.filter(w => w.status === "aktif").length;
-    $("statWahana").textContent = aktif;
+    const statWahana = $("statWahana");
+    const statTransaksi = $("statTransaksi");
+    const statHariIni = $("statHariIni");
+    const statPendapatan = $("statPendapatan");
+    if (!statWahana) return;
+
+    statWahana.textContent = DB.get("wahana").filter(w => w.status === "aktif").length;
 
     const trx = DB.get("transaksi");
+    const todayStr = new Date().toDateString();
     let totalPendapatan = 0;
     let hariIni = 0;
-    const todayStr = new Date().toDateString();
 
     trx.forEach(t => {
         totalPendapatan += t.total || 0;
         if (new Date(t.tanggal).toDateString() === todayStr) hariIni++;
     });
 
-    $("statTransaksi").textContent = trx.length;
-    $("statHariIni").textContent = hariIni;
-    $("statPendapatan").textContent = rupiah(totalPendapatan);
+    statTransaksi.textContent = trx.length;
+    statHariIni.textContent = hariIni;
+    statPendapatan.textContent = rupiah(totalPendapatan);
 }
 
-// ============================================================
-// LOAD
-// ============================================================
 function muatSemuaData() {
     renderWahana();
     updateStats();
 }
 
-console.log("✅ Kasir Wahana Modern UI siap!");
-
 // ============================================================
-// 🎁 BONUS: INTERACTIVE PREMIUM FEATURES
+// MOBILE DRAWER
 // ============================================================
+function initMobileDrawer() {
+    const menuBtn = $("mobileMenuBtn");
+    const drawer = $("mobileDrawer");
+    const overlay = $("mobileDrawerOverlay");
+    const closeBtn = $("mobileDrawerClose");
+    if (!menuBtn || !drawer) return;
 
-// ---------- CUSTOM CURSOR ----------
-const cursorDot = document.querySelector('.cursor-dot');
-const cursorOutline = document.querySelector('.cursor-outline');
+    const openDrawer = () => {
+        drawer.classList.add("open");
+        if (overlay) overlay.classList.add("open");
+        document.body.style.overflow = "hidden";
+    };
+    const closeDrawer = () => {
+        drawer.classList.remove("open");
+        if (overlay) overlay.classList.remove("open");
+        document.body.style.overflow = "";
+    };
 
-if (cursorDot && cursorOutline && window.innerWidth > 991) {
-    let mouseX = 0, mouseY = 0;
-    let outlineX = 0, outlineY = 0;
+    menuBtn.addEventListener("click", openDrawer);
+    if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
+    if (overlay) overlay.addEventListener("click", closeDrawer);
 
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        cursorDot.style.left = mouseX + 'px';
-        cursorDot.style.top = mouseY + 'px';
-    });
-
-    function animateOutline() {
-        outlineX += (mouseX - outlineX) * 0.15;
-        outlineY += (mouseY - outlineY) * 0.15;
-        cursorOutline.style.left = outlineX + 'px';
-        cursorOutline.style.top = outlineY + 'px';
-        requestAnimationFrame(animateOutline);
-    }
-    animateOutline();
-
-    // Hover effect pada elemen interaktif
-    document.addEventListener('mouseover', (e) => {
-        const target = e.target;
-        if (target.matches('button, a, .wahana-item, .qty-btn, .btn-icon, input, select, .nav-link, .quick-btn')) {
-            cursorOutline.classList.add('hovering');
-        }
-    });
-    document.addEventListener('mouseout', (e) => {
-        const target = e.target;
-        if (target.matches('button, a, .wahana-item, .qty-btn, .btn-icon, input, select, .nav-link, .quick-btn')) {
-            cursorOutline.classList.remove('hovering');
-        }
-    });
-}
-
-// ---------- LIVE CLOCK ----------
-const liveTime = document.getElementById('liveTime');
-const liveDate = document.getElementById('liveDate');
-
-function updateClock() {
-    if (!liveTime) return;
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    liveTime.textContent = `${h}:${m}:${s}`;
-    
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    liveDate.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
-}
-updateClock();
-setInterval(updateClock, 1000);
-
-// ---------- DARK MODE ----------
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-
-// Load preferensi tema
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    if (themeIcon) {
-        themeIcon.className = 'bi bi-sun-fill';
-        themeToggle.classList.add('dark');
-        themeToggle.dataset.tooltip = 'Mode Terang';
-    }
-}
-
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        
-        if (isDark) {
-            themeIcon.className = 'bi bi-sun-fill';
-            themeToggle.classList.add('dark');
-            themeToggle.dataset.tooltip = 'Mode Terang';
-            localStorage.setItem('theme', 'dark');
-        } else {
-            themeIcon.className = 'bi bi-moon-stars-fill';
-            themeToggle.classList.remove('dark');
-            themeToggle.dataset.tooltip = 'Mode Gelap';
-            localStorage.setItem('theme', 'light');
-        }
-        
-        // Animate
-        document.body.style.transition = 'background 0.5s, color 0.5s';
-    });
-}
-
-// ---------- RIPPLE EFFECT ON BUTTONS ----------
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button, .wahana-item, .quick-btn, .nav-link, .btn-add, .btn-grad');
-    if (!btn) return;
-    
-    const rect = btn.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    const x = e.clientX - rect.left - size / 2;
-    const y = e.clientY - rect.top - size / 2;
-    
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    ripple.style.width = ripple.style.height = size + 'px';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    
-    const oldPos = btn.style.position;
-    const oldOverflow = btn.style.overflow;
-    btn.style.position = 'relative';
-    btn.style.overflow = 'hidden';
-    btn.appendChild(ripple);
-    
-    setTimeout(() => {
-        ripple.remove();
-        btn.style.position = oldPos;
-        btn.style.overflow = oldOverflow;
-    }, 700);
-});
-
-// ---------- FLOATING NOTIFICATION ----------
-const floatingNotifContainer = document.getElementById('floatingNotifContainer');
-
-function showFloatingNotif(title, msg, icon = 'bi-check-circle-fill') {
-    if (!floatingNotifContainer) return;
-    
-    const notif = document.createElement('div');
-    notif.className = 'floating-notif';
-    notif.innerHTML = `
-        <div class="notif-icon"><i class="bi ${icon}"></i></div>
-        <div class="notif-content">
-            <div class="title">${title}</div>
-            <div class="msg">${msg}</div>
-        </div>
-    `;
-    floatingNotifContainer.appendChild(notif);
-    
-    setTimeout(() => {
-        notif.classList.add('hide');
-        setTimeout(() => notif.remove(), 400);
-    }, 3000);
-}
-
-// ---------- EMOJI RAIN (saat klik wahana) ----------
-function showEmojiRain(emoji, x, y) {
-    if (!x || !y) {
-        x = window.innerWidth / 2;
-        y = window.innerHeight / 2;
-    }
-    
-    for (let i = 0; i < 8; i++) {
-        const el = document.createElement('div');
-        el.className = 'emoji-rain';
-        el.textContent = emoji;
-        el.style.left = (x - 20 + Math.random() * 40) + 'px';
-        el.style.top = y + 'px';
-        el.style.animationDelay = (i * 0.05) + 's';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1500);
-    }
-}
-
-// ---------- CONFETTI ----------
-function launchConfetti() {
-    const container = document.getElementById('confettiContainer');
-    if (!container) return;
-    
-    const colors = ['#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b', '#fbbf24'];
-    const shapes = ['■', '●', '▲', '★', '♥'];
-    
-    for (let i = 0; i < 60; i++) {
-        const piece = document.createElement('div');
-        piece.className = 'confetti-piece';
-        piece.style.left = Math.random() * 100 + '%';
-        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.animationDelay = Math.random() * 0.5 + 's';
-        piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
-        
-        if (Math.random() > 0.5) {
-            piece.style.borderRadius = '50%';
-        }
-        if (Math.random() > 0.7) {
-            piece.textContent = shapes[Math.floor(Math.random() * shapes.length)];
-            piece.style.background = 'transparent';
-            piece.style.color = colors[Math.floor(Math.random() * colors.length)];
-            piece.style.fontSize = '1.5rem';
-            piece.style.width = piece.style.height = 'auto';
-        }
-        
-        container.appendChild(piece);
-        setTimeout(() => piece.remove(), 4000);
-    }
-}
-
-// ---------- ANIMATED COUNTER ----------
-function animateCounter(el, targetValue, prefix = '', suffix = '') {
-    if (!el) return;
-    
-    // Cek apakah target adalah angka
-    const cleanTarget = typeof targetValue === 'string' 
-        ? parseFloat(targetValue.replace(/[^\d.-]/g, '')) || 0
-        : targetValue;
-    
-    const duration = 800;
-    const startTime = performance.now();
-    const startValue = 0;
-    
-    // Simpan format
-    const formatNumber = typeof targetValue === 'string' && targetValue.includes('Rp');
-    const hasDot = typeof targetValue === 'string' && targetValue.includes('.');
-    
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-        
-        const current = startValue + (cleanTarget - startValue) * eased;
-        
-        if (formatNumber) {
-            el.textContent = 'Rp ' + Math.round(current).toLocaleString('id-ID');
-        } else if (hasDot) {
-            el.textContent = current.toFixed(1);
-        } else {
-            el.textContent = Math.round(current).toLocaleString('id-ID');
-        }
-        
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            el.textContent = typeof targetValue === 'string' ? targetValue : targetValue.toLocaleString('id-ID');
-        }
-    }
-    
-    el.classList.add('counting');
-    requestAnimationFrame(update);
-    setTimeout(() => el.classList.remove('counting'), duration + 100);
-}
-
-// ---------- WRAP UPDATE STATS untuk animasi counter ----------
-const originalUpdateStats = updateStats;
-window.updateStats = function() {
-    const statWahana = document.getElementById('statWahana');
-    const statTransaksi = document.getElementById('statTransaksi');
-    const statHariIni = document.getElementById('statHariIni');
-    const statPendapatan = document.getElementById('statPendapatan');
-    
-    // Ambil nilai lama
-    const oldWahana = statWahana?.textContent;
-    const oldTransaksi = statTransaksi?.textContent;
-    const oldHariIni = statHariIni?.textContent;
-    const oldPendapatan = statPendapatan?.textContent;
-    
-    // Jalankan update asli
-    originalUpdateStats();
-    
-    // Animasi counter
-    setTimeout(() => {
-        const newWahana = parseInt(statWahana.textContent) || 0;
-        const newTransaksi = parseInt(statTransaksi.textContent) || 0;
-        const newHariIni = parseInt(statHariIni.textContent) || 0;
-        const newPendapatan = statPendapatan.textContent;
-        
-        if (oldWahana !== statWahana.textContent) animateCounter(statWahana, newWahana);
-        if (oldTransaksi !== statTransaksi.textContent) animateCounter(statTransaksi, newTransaksi);
-        if (oldHariIni !== statHariIni.textContent) animateCounter(statHariIni, newHariIni);
-        if (oldPendapatan !== statPendapatan.textContent) {
-            const num = parseInt(newPendapatan.replace(/[^\d]/g, '')) || 0;
-            animateCounter(statPendapatan, 'Rp ' + num.toLocaleString('id-ID'));
-        }
-    }, 50);
-};
-
-// ---------- NOTIF BADGE ----------
-const notifBtn = document.getElementById('notifBtn');
-const notifBadge = document.getElementById('notifBadge');
-
-function updateNotifBadge(count) {
-    if (!notifBadge) return;
-    if (count > 0) {
-        notifBadge.textContent = count > 9 ? '9+' : count;
-        notifBadge.style.display = 'flex';
-    } else {
-        notifBadge.style.display = 'none';
-    }
-}
-
-// Set notif badge = jumlah transaksi hari ini saat load
-setTimeout(() => {
-    const trx = DB.get('transaksi');
-    const todayStr = new Date().toDateString();
-    const todayCount = trx.filter(t => new Date(t.tanggal).toDateString() === todayStr).length;
-    updateNotifBadge(todayCount);
-}, 500);
-
-if (notifBtn) {
-    notifBtn.addEventListener('click', () => {
-        const trx = DB.get('transaksi');
-        const todayStr = new Date().toDateString();
-        const todayTrx = trx.filter(t => new Date(t.tanggal).toDateString() === todayStr);
-        
-        showFloatingNotif(
-            '📊 Ringkasan Hari Ini',
-            `${todayTrx.length} transaksi hari ini`,
-            'bi-graph-up-arrow'
-        );
-        updateNotifBadge(0);
-    });
-}
-
-// ---------- SHARE WHATSAPP ----------
-const btnShareWA = document.getElementById('btnShareWA');
-if (btnShareWA) {
-    btnShareWA.addEventListener('click', () => {
-        // Ambil teks dari struk
-        const strukText = document.querySelector('.struk-box')?.innerText || '';
-        const encoded = encodeURIComponent('*STRUK PEMBAYARAN*\n\n' + strukText + '\n\n_Terima kasih telah berkunjung!_ 🎉');
-        window.open(`https://wa.me/?text=${encoded}`, '_blank');
-    });
-}
-
-// ---------- CART PROGRESS BAR ----------
-function updateCartProgress() {
-    const cartProgress = document.getElementById('cartProgress');
-    const cartProgressFill = document.getElementById('cartProgressFill');
-    if (!cartProgress || !cartProgressFill) return;
-    
-    const itemCount = Object.keys(cart).length;
-    const targetItems = 5; // max untuk visualisasi
-    const percent = Math.min((itemCount / targetItems) * 100, 100);
-    
-    if (itemCount === 0) {
-        cartProgress.style.display = 'none';
-    } else {
-        cartProgress.style.display = 'block';
-        cartProgressFill.style.width = percent + '%';
-    }
-}
-
-// ============================================================
-// WAHANA - READ (Card Grid Version)
-// ============================================================
-let searchKeyword = "";
-
-function renderWahana() {
-    let list = DB.get("wahana");
-    
-    // Filter berdasarkan pencarian
-    if (searchKeyword) {
-        list = list.filter(w => 
-            w.nama_wahana.toLowerCase().includes(searchKeyword.toLowerCase())
-        );
-    }
-
-    const container = document.getElementById("wahanaList");
-    const emptyWahana = document.getElementById("emptyWahana");
-    const jumlahWahanaText = document.getElementById("jumlahWahanaText");
-    
-    // Update counter
-    const total = DB.get("wahana").length;
-    const aktif = DB.get("wahana").filter(w => w.status === "aktif").length;
-    if (jumlahWahanaText) {
-        jumlahWahanaText.textContent = `${total} Wahana · ${aktif} Aktif`;
-    }
-
-    container.innerHTML = "";
-
-    if (list.length === 0) {
-        emptyWahana.classList.remove("d-none");
-        return;
-    }
-    emptyWahana.classList.add("d-none");
-
-    list.forEach((w, i) => {
-        const card = document.createElement("div");
-        card.className = "wahana-card";
-        card.style.animationDelay = `${Math.min(i * 0.03, 0.3)}s`;
-        
-        card.innerHTML = `
-            <div class="wahana-number">${i + 1}</div>
-            
-            <div class="wahana-card-emoji">${w.emoji || getEmoji(w.nama_wahana)}</div>
-            
-            <h5 class="wahana-card-name">${escapeHtml(w.nama_wahana)}</h5>
-            
-            <div class="wahana-card-price">${rupiah(w.harga)}</div>
-            
-            <div class="wahana-card-info">
-                <span class="wahana-card-status ${w.status}">
-                    ${w.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
-                </span>
-            </div>
-            
-            <div class="wahana-card-actions">
-                <button class="btn-edit-card" data-id="${w.id}">
-                    <i class="bi bi-pencil-fill"></i> Edit
-                </button>
-                <button class="btn-delete-card" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}">
-                    <i class="bi bi-trash-fill"></i> Hapus
-                </button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
-
-    // Bind event EDIT
-    container.querySelectorAll(".btn-edit-card").forEach(btn => {
-        btn.addEventListener("click", () => bukaModalWahana(Number(btn.dataset.id)));
-    });
-
-    // Bind event HAPUS
-    container.querySelectorAll(".btn-delete-card").forEach(btn => {
-        btn.addEventListener("click", () => {
-            konfirmasiHapus("wahana", Number(btn.dataset.id), btn.dataset.nama);
+    document.querySelectorAll(".mobile-nav-link").forEach(link => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const page = link.dataset.page;
+            if (page) {
+                navigateTo(page);
+                closeDrawer();
+                document.querySelectorAll(".mobile-nav-link").forEach(l => l.classList.remove("active"));
+                link.classList.add("active");
+            }
         });
     });
-}
 
-// ============================================================
-// SEARCH WAHANA — Live Search
-// ============================================================
-document.addEventListener("input", (e) => {
-    if (e.target.id === "searchWahana") {
-        searchKeyword = e.target.value.trim();
-        renderWahana();
-    }
-});
-
-// ============================================================
-// 📱 MOBILE DRAWER MENU
-// ============================================================
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const mobileDrawer = document.getElementById('mobileDrawer');
-const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
-const mobileDrawerClose = document.getElementById('mobileDrawerClose');
-
-function openDrawer() {
-    if (mobileDrawer) mobileDrawer.classList.add('open');
-    if (mobileDrawerOverlay) mobileDrawerOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeDrawer() {
-    if (mobileDrawer) mobileDrawer.classList.remove('open');
-    if (mobileDrawerOverlay) mobileDrawerOverlay.classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openDrawer);
-if (mobileDrawerClose) mobileDrawerClose.addEventListener('click', closeDrawer);
-if (mobileDrawerOverlay) mobileDrawerOverlay.addEventListener('click', closeDrawer);
-
-// Mobile nav links
-document.querySelectorAll('.mobile-nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const page = link.dataset.page;
-        if (page) {
-            navigateTo(page);
+    const logoutMobile = $("mobileLogout");
+    if (logoutMobile) {
+        logoutMobile.addEventListener("click", () => {
             closeDrawer();
-            document.querySelectorAll('.mobile-nav-link').forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-        }
-    });
-});
-
-// Mobile logout
-const mobileLogout = document.getElementById('mobileLogout');
-if (mobileLogout) {
-    mobileLogout.addEventListener('click', () => {
-        closeDrawer();
-        document.getElementById('btnLogout')?.click();
-    });
-}
-
-// Mobile clock
-function updateMobileClock() {
-    const t = document.getElementById('mobileLiveTime');
-    const d = document.getElementById('mobileLiveDate');
-    if (!t || !d) return;
-    
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    t.textContent = `${h}:${m}:${s}`;
-    
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    d.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
-}
-updateMobileClock();
-setInterval(updateMobileClock, 1000);
-
-// Update mobile user info saat login
-const originalLoginSuccess2 = window.loginSuccess || loginSuccess;
-window.loginSuccess = function() {
-    originalLoginSuccess2();
-    
-    const mobileAvatar = document.getElementById('mobileAvatar');
-    const mobileUserNama = document.getElementById('mobileUserNama');
-    const mobileUserRole = document.getElementById('mobileUserRole');
-    
-    if (mobileAvatar && currentUser) mobileAvatar.textContent = getInitials(currentUser.nama);
-    if (mobileUserNama && currentUser) mobileUserNama.textContent = currentUser.nama;
-    if (mobileUserRole && currentUser) mobileUserRole.textContent = currentUser.role;
-    
-    // Sembunyikan Wahana untuk kasir di drawer mobile
-    const mobileWahanaLink = document.querySelector('.mobile-wahana-link');
-    if (mobileWahanaLink && currentUser) {
-        mobileWahanaLink.style.display = currentUser.role === 'admin' ? '' : 'none';
+            $("btnLogout")?.click();
+        });
     }
-};
+}
 
-// Theme toggle untuk mobile (di drawer)
-// Sudah ada di navbar desktop saja
+// ---------- LIVE CLOCK (Mobile) ----------
+function initMobileClock() {
+    const update = () => {
+        const t = $("mobileLiveTime");
+        const d = $("mobileLiveDate");
+        if (!t || !d) return;
+        const now = new Date();
+        const p = (x) => String(x).padStart(2, "0");
+        t.textContent = `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
+        const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        d.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+    };
+    update();
+    setInterval(update, 1000);
+}
 
-console.log('📱 Mobile drawer aktif!');
+// ============================================================
+// INIT SEMUA
+// ============================================================
+document.addEventListener("DOMContentLoaded", () => {
+    initLogin();
+    initLogout();
+    initNavigation();
+    initWahana();
+    initKonfirmasiHapus();
+    initKasir();
+    initLaporan();
+    initMobileDrawer();
+    initMobileClock();
+
+    // Dark mode dari localStorage
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark-mode");
+    }
+
+    console.log("✅ Kasir Wahana siap!");
+})
