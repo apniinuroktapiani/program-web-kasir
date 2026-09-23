@@ -3135,3 +3135,172 @@ body.dark-mode .floating-notif .notif-content .title { color: #e2e8f0; }
         margin-bottom: 0;
     }
 }
+
+/* ============================================================
+   💳 PAYMENT METHOD SELECTOR
+   ============================================================ */
+.payment-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1.15rem;
+}
+
+.payment-tab {
+    padding: 1rem 0.75rem;
+    border-radius: 14px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.payment-tab .tab-icon {
+    font-size: 1.6rem;
+    transition: transform 0.3s;
+}
+
+.payment-tab:hover {
+    border-color: #a78bfa;
+    transform: translateY(-2px);
+}
+
+.payment-tab.active {
+    border-color: #8b5cf6;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+    color: #7c3aed;
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+}
+
+.payment-tab.active .tab-icon {
+    transform: scale(1.15);
+}
+
+/* ============================================================
+   📱 QRIS DISPLAY
+   ============================================================ */
+.qris-box {
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border: 2px dashed #c4b5fd;
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.15rem;
+    animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.qris-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(139, 92, 246, 0.08), transparent);
+    animation: spin 8s linear infinite;
+    pointer-events: none;
+}
+
+.qris-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    background: white;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    margin-bottom: 0.85rem;
+    font-weight: 800;
+    font-size: 0.75rem;
+    color: #0f172a;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+}
+
+.qris-logo .qris-mark {
+    font-size: 1rem;
+}
+
+.qris-qr-wrapper {
+    position: relative;
+    display: inline-block;
+    padding: 1rem;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15);
+    margin-bottom: 0.85rem;
+    z-index: 2;
+}
+
+.qris-qr-wrapper img {
+    display: block;
+    width: 220px;
+    height: 220px;
+    border-radius: 10px;
+}
+
+.qris-amount {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.8px;
+    margin-bottom: 0.35rem;
+    position: relative;
+    z-index: 2;
+}
+
+.qris-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
+}
+
+.qris-instruction {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.08));
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #7c3aed;
+    margin-top: 0.85rem;
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .qris-qr-wrapper img {
+        width: 180px;
+        height: 180px;
+    }
+    .qris-amount {
+        font-size: 1.3rem;
+    }
+    .payment-tab {
+        padding: 0.85rem 0.6rem;
+        font-size: 0.82rem;
+    }
+    .payment-tab .tab-icon {
+        font-size: 1.4rem;
+    }
+}
