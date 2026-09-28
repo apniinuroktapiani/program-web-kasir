@@ -1,422 +1,1510 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kasir Wahana Taman Budaya</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Kasir Wahana</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --violet:#7c3aed;--pink:#ec4899;--cyan:#06b6d4;--green:#10b981;--orange:#f59e0b;
+  --ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
+  --grad-brand:linear-gradient(135deg,#7c3aed 0%,#ec4899 100%);
+  --grad-violet:linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%);
+  --grad-pink:linear-gradient(135deg,#ec4899 0%,#f43f5e 100%);
+  --grad-cyan:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);
+  --grad-green:linear-gradient(135deg,#10b981 0%,#14b8a6 100%);
+  --grad-orange:linear-gradient(135deg,#f97316 0%,#ef4444 100%);
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Plus Jakarta Sans',-apple-system,sans-serif;
+  color:var(--ink);min-height:100vh;overflow-x:hidden;
+  letter-spacing:-.011em;background:#f8fafc;
+  -webkit-font-smoothing:antialiased;
+}
+.hide{display:none!important}
+input,button,select,textarea{font-family:inherit}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeScale{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes slideL{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+@keyframes floatSlow{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-50px) scale(1.1)}66%{transform:translate(-30px,30px) scale(.95)}}
+@keyframes glow{0%,100%{box-shadow:0 0 40px rgba(124,58,237,.4)}50%{box-shadow:0 0 70px rgba(124,58,237,.75)}}
+@keyframes gradMove{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.7)}70%{box-shadow:0 0 0 12px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ============ LOGIN ============ */
+#loginPage{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(-45deg,#0f0a1e,#1e1b4b,#4c1d95,#831843);
+  background-size:400% 400%;
+  animation:gradMove 20s ease infinite;
+  overflow:hidden;z-index:9999;
+  overscroll-behavior:none;
+}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;animation:floatSlow 15s ease-in-out infinite;pointer-events:none}
+.blob-1{width:600px;height:600px;background:#7c3aed;top:-200px;left:-200px}
+.blob-2{width:500px;height:500px;background:#ec4899;bottom:-150px;right:-150px;animation-delay:-5s}
+.blob-3{width:400px;height:400px;background:#06b6d4;top:50%;left:50%;animation-delay:-10s}
+
+.login-scroll{
+  position:relative;z-index:10;
+  width:100%;max-width:100%;
+  padding:1rem;
+  display:flex;align-items:center;justify-content:center;
+  max-height:100%;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.login-card{
+  width:100%;max-width:420px;
+  background:rgba(15,15,30,.7);
+  backdrop-filter:blur(40px) saturate(200%);
+  -webkit-backdrop-filter:blur(40px) saturate(200%);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:28px;
+  padding:2.5rem 2rem;
+  box-shadow:0 40px 100px rgba(0,0,0,.5),0 0 80px rgba(124,58,237,.25);
+  animation:fadeScale .9s cubic-bezier(.16,1,.3,1);
+  margin:auto;
+}
+.login-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent,#a78bfa,#f472b6,#67e8f9,transparent);
+  border-radius:28px 28px 0 0;
+}
+.logo-wrap{position:relative;width:88px;height:88px;margin:0 auto 1.25rem}
+.logo-wrap::before{
+  content:'';position:absolute;inset:-18px;border-radius:50%;
+  background:conic-gradient(from 0deg,#7c3aed,#ec4899,#06b6d4,#10b981,#7c3aed);
+  animation:spin 5s linear infinite;filter:blur(18px);opacity:.8;
+}
+.logo-face{
+  position:relative;width:100%;height:100%;
+  background:linear-gradient(135deg,#1e1b4b,#4c1d95 50%,#831843);
+  border:2px solid rgba(255,255,255,.2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:2.6rem;z-index:2;
+  box-shadow:0 0 40px rgba(124,58,237,.7),inset 0 0 40px rgba(139,92,246,.4);
+  animation:glow 3s ease-in-out infinite;
+}
+.login-card h1{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;
+  font-size:1.85rem;text-align:center;margin-bottom:.5rem;
+  letter-spacing:-1.2px;line-height:1.15;
+  background:linear-gradient(135deg,#fff 0%,#c4b5fd 40%,#f9a8d4 70%,#67e8f9 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.login-card .tagline{
+  text-align:center;color:rgba(255,255,255,.6);
+  font-size:.85rem;margin-bottom:1.75rem;font-weight:500;
+}
+.field{position:relative;margin-bottom:1rem}
+.field input{
+  width:100%;padding:1.05rem 1rem 1.05rem 3.1rem;
+  font-size:1rem;font-weight:500;font-family:inherit;
+  color:#fff;
+  background:rgba(255,255,255,.12);
+  border:2px solid rgba(255,255,255,.25);
+  border-radius:16px;
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+  caret-color:#a78bfa;
+}
+.field input::placeholder{color:rgba(255,255,255,.55);font-weight:500}
+.field input:focus{
+  outline:none;background:rgba(255,255,255,.2);
+  border-color:rgba(167,139,250,.95);
+  box-shadow:0 0 0 5px rgba(124,58,237,.25),0 0 40px rgba(124,58,237,.4);
+}
+.field .ic{
+  position:absolute;left:1.15rem;top:50%;transform:translateY(-50%);
+  font-size:1.1rem;opacity:.7;pointer-events:none;transition:all .3s;
+}
+.field input:focus~.ic{opacity:1;transform:translateY(-50%) scale(1.1)}
+.btn-login{
+  width:100%;padding:1.1rem;border:none;border-radius:16px;
+  font-size:1rem;font-weight:800;letter-spacing:.5px;color:#fff;
+  background:var(--grad-brand);background-size:200% 200%;
+  animation:gradMove 4s ease infinite;cursor:pointer;
+  box-shadow:0 15px 40px rgba(124,58,237,.5),0 0 0 1px rgba(255,255,255,.15) inset;
+  transition:all .35s cubic-bezier(.16,1,.3,1);margin-top:.5rem;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+}
+.btn-login::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  transition:left .8s;
+}
+.btn-login:hover::before{left:100%}
+.btn-login:hover{transform:translateY(-3px);box-shadow:0 22px 55px rgba(124,58,237,.7)}
+.btn-login:active{transform:translateY(-1px)}
+.demo-box{
+  text-align:center;margin-top:1.5rem;padding-top:1.25rem;
+  border-top:1px solid rgba(255,255,255,.1);
+  font-size:.78rem;color:rgba(255,255,255,.5);font-weight:500;
+}
+.demo-box strong{color:rgba(255,255,255,.75);font-size:.82rem;display:block;margin-bottom:.5rem}
+.demo-box code{
+  background:rgba(124,58,237,.3);border:1px solid rgba(167,139,250,.35);
+  color:#ddd6fe;padding:.3rem .6rem;border-radius:8px;
+  font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;
+  margin:0 .15rem;display:inline-block;margin-bottom:.3rem;
+}
+.err-alert{
+  background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);
+  color:#fecaca;padding:.75rem 1rem;border-radius:12px;
+  font-size:.82rem;font-weight:600;margin-bottom:1rem;
+  display:flex;align-items:center;gap:.5rem;animation:fadeUp .3s;
+}
+
+@media(max-width:480px){
+  .login-card{padding:2rem 1.5rem;border-radius:24px}
+  .login-card h1{font-size:1.55rem;letter-spacing:-1px}
+  .logo-wrap{width:76px;height:76px;margin-bottom:1rem}
+  .logo-face{font-size:2.2rem}
+  .tagline{font-size:.78rem;margin-bottom:1.5rem}
+  .field input{padding:.95rem .9rem .95rem 2.85rem;font-size:.92rem}
+  .field .ic{left:1rem;font-size:1rem}
+  .btn-login{padding:1rem;font-size:.92rem}
+  .demo-box{font-size:.72rem;margin-top:1.25rem;padding-top:1rem}
+}
+
+/* ============ APP ============ */
+#appPage{
+  background:#f8fafc;
+  background-image:
+    radial-gradient(at 20% 0%,rgba(124,58,237,.06) 0,transparent 50%),
+    radial-gradient(at 80% 0%,rgba(236,72,153,.06) 0,transparent 50%),
+    radial-gradient(at 50% 100%,rgba(6,182,212,.05) 0,transparent 50%);
+  background-attachment:fixed;
+  min-height:100vh;
+}
+.navbar{
+  background:rgba(255,255,255,.8);
+  backdrop-filter:blur(30px) saturate(200%);
+  -webkit-backdrop-filter:blur(30px) saturate(200%);
+  border-bottom:1px solid rgba(226,232,240,.5);
+  padding:.85rem 0;position:sticky;top:0;z-index:1000;
+  box-shadow:0 4px 20px rgba(15,23,42,.04);
+}
+.nav-inner{max-width:1240px;margin:0 auto;padding:0 1.25rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.logo-grp{display:flex;align-items:center;gap:.65rem;cursor:pointer}
+.logo-cube{
+  width:44px;height:44px;border-radius:14px;
+  background:var(--grad-brand);background-size:200% 200%;
+  animation:gradMove 5s ease infinite;
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+  box-shadow:0 10px 25px rgba(124,58,237,.4);
+}
+.logo-text{
+  font-weight:900;font-size:1.2rem;letter-spacing:-1px;
+  background:var(--grad-brand);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-tabs-pill{
+  display:flex;gap:.3rem;padding:.35rem;background:rgba(241,245,249,.85);
+  border:1px solid rgba(226,232,240,.7);border-radius:16px;
+}
+.nav-tabs-pill a{
+  padding:.6rem 1.1rem;border-radius:12px;color:var(--muted);
+  font-weight:700;font-size:.85rem;cursor:pointer;
+  display:flex;align-items:center;gap:.45rem;
+  transition:all .3s cubic-bezier(.16,1,.3,1);text-decoration:none;
+  white-space:nowrap;
+}
+.nav-tabs-pill a:hover{color:var(--violet);background:#fff;transform:translateY(-1px)}
+.nav-tabs-pill a.active{
+  color:#fff;background:var(--grad-brand);
+  box-shadow:0 8px 20px rgba(124,58,237,.4);
+}
+.nav-user{display:flex;align-items:center;gap:.65rem}
+.user-chip{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.35rem .9rem .35rem .35rem;
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:999px;transition:all .3s;
+}
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--grad-brand);color:#fff;
+  font-weight:800;font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 15px rgba(124,58,237,.4),0 0 0 2px #fff;
+}
+.user-meta{display:flex;flex-direction:column;line-height:1.15}
+.user-meta .nm{font-weight:800;font-size:.85rem;color:var(--ink)}
+.user-meta .rl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:800}
+.btn-icon{
+  width:44px;height:44px;border-radius:12px;
+  border:1.5px solid var(--line);background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.1rem;color:var(--muted);
+  transition:all .3s;
+}
+.btn-icon:hover{color:var(--violet);border-color:#c4b5fd;transform:translateY(-2px)}
+.btn-icon.logout:hover{color:#dc2626;border-color:#fca5a5;background:#fef2f2}
+
+.main{max-width:1240px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+.page-head{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:1rem;margin-bottom:2rem;
+  animation:slideL .5s cubic-bezier(.16,1,.3,1);
+}
+.page-title{
+  font-weight:900;font-size:1.8rem;letter-spacing:-1.2px;color:var(--ink);
+  display:flex;align-items:center;gap:.85rem;margin:0;
+}
+.title-ic{
+  position:relative;width:52px;height:52px;border-radius:16px;
+  background:var(--grad-brand);background-size:200% 200%;
+  animation:gradMove 5s ease infinite;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.45rem;color:#fff;
+  box-shadow:0 15px 40px rgba(124,58,237,.45),0 0 0 3px #fff;
+  flex-shrink:0;
+}
+.title-ic::after{
+  content:'';position:absolute;inset:-6px;border-radius:20px;
+  background:conic-gradient(from 0deg,rgba(124,58,237,.5),rgba(236,72,153,.5),rgba(6,182,212,.5),rgba(124,58,237,.5));
+  animation:spin 6s linear infinite;filter:blur(12px);z-index:-1;
+}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.25rem;margin-bottom:2rem}
+.stat-card{
+  position:relative;background:#fff;border-radius:24px;padding:1.75rem 1.5rem;
+  border:1px solid rgba(226,232,240,.8);
+  box-shadow:0 4px 20px rgba(15,23,42,.04);
+  overflow:hidden;transition:all .5s cubic-bezier(.16,1,.3,1);
+  animation:fadeUp .6s backwards;min-height:170px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.stat-card:nth-child(1){animation-delay:.05s}
+.stat-card:nth-child(2){animation-delay:.1s}
+.stat-card:nth-child(3){animation-delay:.15s}
+.stat-card:nth-child(4){animation-delay:.2s}
+.stat-card::before{
+  content:'';position:absolute;top:-80px;right:-80px;width:220px;height:220px;
+  border-radius:50%;opacity:.08;transition:all .6s cubic-bezier(.16,1,.3,1);
+}
+.stat-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:4px;
+  transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.16,1,.3,1);
+}
+.stat-card.c1::before,.stat-card.c1::after{background:var(--grad-cyan)}
+.stat-card.c2::before,.stat-card.c2::after{background:var(--grad-violet)}
+.stat-card.c3::before,.stat-card.c3::after{background:var(--grad-pink)}
+.stat-card.c4::before,.stat-card.c4::after{background:var(--grad-green)}
+.stat-card:hover{transform:translateY(-8px);box-shadow:0 25px 60px rgba(15,23,42,.12)}
+.stat-card:hover::before{transform:scale(1.6);opacity:.15}
+.stat-card:hover::after{transform:scaleX(1)}
+.stat-ico{
+  width:56px;height:56px;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;color:#fff;margin-bottom:1.25rem;
+  transition:all .5s cubic-bezier(.16,1,.3,1);
+  box-shadow:0 12px 28px rgba(0,0,0,.18),0 0 0 3px rgba(255,255,255,.6);
+}
+.stat-card.c1 .stat-ico{background:var(--grad-cyan)}
+.stat-card.c2 .stat-ico{background:var(--grad-violet)}
+.stat-card.c3 .stat-ico{background:var(--grad-pink)}
+.stat-card.c4 .stat-ico{background:var(--grad-green)}
+.stat-card:hover .stat-ico{transform:scale(1.15) rotate(-8deg) translateY(-4px)}
+.stat-lbl{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem}
+.stat-val{font-size:2.4rem;font-weight:900;color:var(--ink);line-height:1;letter-spacing:-2px}
+.stat-val.sm{font-size:1.4rem;letter-spacing:-.8px}
+
+.card{
+  background:#fff;border-radius:24px;
+  border:1px solid rgba(226,232,240,.8);
+  box-shadow:0 4px 20px rgba(15,23,42,.04);
+  overflow:hidden;transition:all .4s;margin-bottom:1.5rem;
+}
+.card-head{
+  padding:1.4rem 1.65rem;border-bottom:1px solid rgba(226,232,240,.7);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:.75rem;
+}
+.card-title{
+  font-weight:800;font-size:1.1rem;letter-spacing:-.5px;color:var(--ink);
+  display:flex;align-items:center;gap:.6rem;margin:0;
+}
+.card-body{padding:1.65rem}
+.chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.4rem .85rem;font-weight:800;font-size:.72rem;
+  border-radius:999px;letter-spacing:.3px;
+}
+.chip-green{background:rgba(16,185,129,.1);color:#047857;border:1px solid rgba(16,185,129,.2)}
+.chip-purple{background:rgba(124,58,237,.1);color:#6d28d9;border:1px solid rgba(124,58,237,.2)}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem}
+.witem{
+  position:relative;cursor:pointer;background:#fff;
+  border:2px solid var(--line);border-radius:22px;padding:1.4rem .95rem;
+  text-align:center;transition:all .4s cubic-bezier(.16,1,.3,1);
+  overflow:hidden;animation:fadeScale .5s backwards;
+}
+.witem::before{
+  content:'';position:absolute;inset:0;
+  background:var(--grad-brand);opacity:0;transition:opacity .4s;
+}
+.witem:hover{
+  border-color:transparent;transform:translateY(-8px) scale(1.03);
+  box-shadow:0 25px 55px rgba(124,58,237,.3);
+}
+.witem:hover::before{opacity:.04}
+.witem .em{
+  position:relative;font-size:2.8rem;margin-bottom:.75rem;display:block;
+  transition:transform .5s cubic-bezier(.16,1,.3,1);
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.15));z-index:2;
+}
+.witem:hover .em{transform:scale(1.25) rotate(-10deg) translateY(-6px)}
+.witem .nm{
+  position:relative;font-weight:800;font-size:.95rem;color:var(--ink);
+  margin-bottom:.5rem;letter-spacing:-.3px;z-index:2;
+}
+.witem .pr{
+  position:relative;font-size:.78rem;font-weight:900;
+  color:#6d28d9;background:rgba(124,58,237,.1);
+  padding:.35rem .75rem;border-radius:999px;display:inline-block;
+  letter-spacing:-.2px;z-index:2;
+}
+.witem .stt{
+  position:relative;margin-top:.55rem;font-size:.68rem;font-weight:900;
+  text-transform:uppercase;letter-spacing:.6px;z-index:2;
+}
+.witem .acts{
+  position:relative;display:flex;gap:.35rem;margin-top:.7rem;z-index:2;
+}
+.witem .acts button{
+  flex:1;height:32px;border-radius:9px;border:1.5px solid var(--line);
+  background:#fff;font-size:.9rem;font-weight:900;cursor:pointer;
+  transition:all .25s cubic-bezier(.16,1,.3,1);
+}
+.witem .acts .edit{color:var(--violet)}
+.witem .acts .edit:hover{background:var(--grad-brand);color:#fff;border-color:transparent;transform:translateY(-2px)}
+.witem .acts .del{color:#dc2626}
+.witem .acts .del:hover{background:var(--grad-pink);color:#fff;border-color:transparent;transform:translateY(-2px)}
+
+.citem{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.9rem 1.05rem;margin-bottom:.6rem;
+  background:linear-gradient(135deg,#f8fafc,#f1f5f9);
+  border:1px solid rgba(226,232,240,.7);
+  border-radius:16px;animation:slideL .4s cubic-bezier(.16,1,.3,1);
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+}
+.citem:hover{
+  background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(236,72,153,.06));
+  border-color:rgba(124,58,237,.25);transform:translateX(4px);
+}
+.citem .nm{font-weight:800;font-size:.92rem;color:var(--ink);margin-bottom:.2rem}
+.citem .dt{font-size:.75rem;color:var(--muted);font-weight:700;font-family:'JetBrains Mono',monospace}
+.citem .st{
+  font-weight:900;background:var(--grad-brand);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  font-size:1.05rem;margin-bottom:.4rem;letter-spacing:-.5px;
+}
+.qbtn{
+  width:30px;height:30px;border-radius:9px;border:1.5px solid var(--line);
+  background:#fff;color:var(--ink);font-weight:900;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .25s cubic-bezier(.16,1,.3,1);
+  font-size:.9rem;padding:0;line-height:1;
+}
+.qbtn:hover{background:var(--grad-brand);color:#fff;border-color:transparent;transform:translateY(-2px) scale(1.08)}
+.qbtn.del:hover{background:var(--grad-pink)}
+
+.cart-empty{padding:3rem 1rem;text-align:center}
+.cart-empty .ic{
+  width:105px;height:105px;margin:0 auto 1.25rem;border-radius:50%;
+  background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(236,72,153,.1));
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.8rem;animation:float 3s ease-in-out infinite;
+}
+.cart-empty p{font-weight:800;color:var(--ink);font-size:.95rem;margin:0 0 .25rem}
+.cart-empty small{color:var(--muted);font-weight:500;font-size:.85rem}
+
+.summary{
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(236,72,153,.08));
+  border:1.5px solid rgba(124,58,237,.15);border-radius:18px;
+  padding:1.2rem 1.35rem;margin:1.25rem 0;
+}
+.summary .row{display:flex;justify-content:space-between;padding:.4rem 0;font-weight:600}
+.summary .row.tt{
+  font-size:1.4rem;font-weight:900;
+  color:var(--ink);border-top:2px dashed rgba(124,58,237,.25);
+  padding-top:.75rem;margin-top:.5rem;letter-spacing:-.8px;
+}
+.summary .row.tt span:last-child{
+  background:var(--grad-brand);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.summary .row.km span:last-child{color:#059669;font-weight:900}
+
+.pay-tabs{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem}
+.pay-tab{
+  padding:1.05rem .75rem;border-radius:16px;border:2px solid var(--line);
+  background:#fff;cursor:pointer;font-weight:800;
+  font-size:.88rem;color:var(--muted);display:flex;flex-direction:column;
+  align-items:center;gap:.4rem;transition:all .3s cubic-bezier(.16,1,.3,1);
+}
+.pay-tab .em{font-size:1.7rem;transition:transform .3s}
+.pay-tab:hover{border-color:#c4b5fd;transform:translateY(-3px)}
+.pay-tab.active{
+  border-color:transparent;color:#fff;
+  background:var(--grad-brand);background-size:200% 200%;
+  animation:gradMove 4s ease infinite;
+  box-shadow:0 12px 30px rgba(124,58,237,.4);
+}
+.pay-tab.active .em{transform:scale(1.2)}
+
+.qris-box{
+  background:linear-gradient(135deg,#faf5ff,#fff 50%,#fce7f3);
+  border:2px dashed #c4b5fd;border-radius:20px;
+  padding:1.5rem;text-align:center;margin-bottom:1.2rem;
+  animation:fadeScale .4s cubic-bezier(.16,1,.3,1);
+}
+.qris-tag{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.45rem 1rem;background:#fff;border-radius:999px;
+  box-shadow:0 4px 15px rgba(0,0,0,.06);margin-bottom:.9rem;
+  font-weight:900;font-size:.72rem;color:var(--ink);letter-spacing:1.5px;
+}
+.qris-wrap{
+  display:inline-block;padding:1rem;background:#fff;
+  border-radius:20px;box-shadow:0 15px 40px rgba(124,58,237,.2);
+  margin-bottom:.9rem;
+}
+.qris-wrap img{display:block;width:230px;height:230px;border-radius:12px;background:#fff}
+.qris-amt{
+  font-size:1.6rem;font-weight:900;
+  background:var(--grad-brand);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;letter-spacing:-1px;margin-bottom:.4rem;
+}
+.qris-info{font-size:.78rem;color:var(--muted);font-weight:600}
+.qris-note{
+  display:flex;align-items:center;justify-content:center;gap:.35rem;
+  padding:.7rem 1rem;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(236,72,153,.1));
+  border-radius:12px;font-size:.75rem;font-weight:800;color:#6d28d9;margin-top:.9rem;
+}
+
+.lbl{font-weight:800;font-size:.82rem;color:var(--ink);margin-bottom:.5rem;display:block}
+.lbl .req{color:#ef4444;margin-left:3px}
+.inp{
+  width:100%;padding:.95rem 1.15rem;border-radius:14px;
+  border:2px solid var(--line);background:rgba(248,250,252,.7);
+  font-size:.95rem;font-weight:600;color:var(--ink);
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+}
+.inp:focus{
+  outline:none;border-color:var(--violet);background:#fff;
+  box-shadow:0 0 0 5px rgba(124,58,237,.12);
+}
+.inp::placeholder{color:#94a3b8;font-weight:500}
+#inputBayar{
+  font-size:1.6rem!important;font-weight:900!important;
+  font-family:'Plus Jakarta Sans',monospace!important;
+  text-align:right;letter-spacing:-1px;
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border-color:#fcd34d;color:#78350f;
+}
+#inputBayar:focus{border-color:var(--orange);box-shadow:0 0 0 5px rgba(245,158,11,.15)}
+
+.btn{
+  padding:.95rem 1.65rem;border:none;border-radius:14px;
+  font-weight:800;font-size:.92rem;color:#fff;
+  cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1);
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  position:relative;overflow:hidden;
+}
+.btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  transition:left .7s;
+}
+.btn:hover::before{left:100%}
+.btn-brand{background:var(--grad-brand);background-size:200% 200%;animation:gradMove 4s ease infinite;box-shadow:0 12px 30px rgba(124,58,237,.4)}
+.btn-brand:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(124,58,237,.55)}
+.btn-green{background:var(--grad-green);box-shadow:0 12px 30px rgba(16,185,129,.4)}
+.btn-green:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(16,185,129,.55)}
+.btn-danger{background:var(--grad-pink);box-shadow:0 12px 30px rgba(236,72,153,.4)}
+.btn-danger:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(236,72,153,.55)}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--muted)}
+.btn-ghost:hover{background:#f8fafc;color:var(--ink);border-color:#cbd5e1}
+
+.trx-card{
+  background:#fff;border-radius:20px;padding:1.2rem 1.3rem;
+  border:1.5px solid rgba(226,232,240,.9);
+  box-shadow:0 2px 12px rgba(15,23,42,.04);
+  transition:all .35s cubic-bezier(.16,1,.3,1);
+  animation:fadeUp .4s backwards;
+  position:relative;overflow:hidden;margin-bottom:.85rem;
+}
+.trx-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:var(--grad-brand);transform:scaleY(0);transform-origin:top;
+  transition:transform .4s cubic-bezier(.16,1,.3,1);
+}
+.trx-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 15px 35px rgba(124,58,237,.15);
+  border-color:rgba(124,58,237,.3);
+}
+.trx-card:hover::before{transform:scaleY(1)}
+.trx-top{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:.85rem;padding-bottom:.9rem;margin-bottom:.9rem;
+  border-bottom:1px dashed rgba(226,232,240,.9);
+}
+.trx-code{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;font-weight:700;color:#6d28d9;
+  background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(236,72,153,.12));
+  padding:.35rem .75rem;border-radius:8px;
+  border:1px solid rgba(124,58,237,.2);letter-spacing:.3px;
+  margin-bottom:.4rem;word-break:break-all;
+}
+.trx-date{font-size:.8rem;color:var(--muted);font-weight:600}
+.trx-total{text-align:right;flex-shrink:0}
+.trx-total .lbl{font-size:.66rem;color:#94a3b8;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.15rem}
+.trx-total .val{
+  font-size:1.4rem;font-weight:900;
+  background:var(--grad-brand);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;letter-spacing:-1px;white-space:nowrap;
+}
+.trx-mid{display:flex;align-items:center;gap:.85rem;margin-bottom:1rem}
+.trx-av{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--grad-brand);color:#fff;font-weight:800;font-size:.88rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px rgba(124,58,237,.35),0 0 0 2.5px #fff;flex-shrink:0;
+}
+.trx-usr .nm{font-weight:800;font-size:.9rem;color:var(--ink);margin-bottom:.15rem}
+.trx-usr .rl{font-size:.68rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+.badge-method{
+  display:inline-flex;align-items:center;gap:.35rem;
+  padding:.35rem .8rem;border-radius:999px;font-size:.68rem;
+  font-weight:900;text-transform:uppercase;letter-spacing:.5px;
+  background:rgba(16,185,129,.12);color:#047857;
+  border:1px solid rgba(16,185,129,.25);flex-shrink:0;margin-left:auto;
+}
+.badge-method.qris{background:rgba(6,182,212,.12);color:#0369a1;border-color:rgba(6,182,212,.25)}
+.trx-acts{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.trx-acts.one{grid-template-columns:1fr}
+.trx-btn{
+  padding:.8rem 1rem;border:none;border-radius:12px;
+  font-weight:800;font-size:.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+}
+.trx-btn-view{
+  background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(59,130,246,.12));
+  color:#0369a1;border:1.5px solid rgba(6,182,212,.25);
+}
+.trx-btn-view:hover{
+  background:var(--grad-cyan);color:#fff;border-color:transparent;
+  transform:translateY(-2px);
+}
+.trx-btn-del{
+  background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.06));
+  color:#b91c1c;border:1.5px solid rgba(239,68,68,.25);
+}
+.trx-btn-del:hover{
+  background:var(--grad-pink);color:#fff;border-color:transparent;
+  transform:translateY(-2px);
+}
+
+.empty{padding:5rem 1.5rem;text-align:center}
+.empty .ic{
+  width:120px;height:120px;margin:0 auto 1.5rem;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(236,72,153,.1));
+  display:flex;align-items:center;justify-content:center;
+  font-size:3.2rem;animation:float 4s ease-in-out infinite;
+}
+.empty h6{font-weight:800;color:var(--ink);margin-bottom:.5rem;font-size:1.15rem}
+.empty p{color:var(--muted);font-size:.9rem;margin:0;font-weight:500}
+
+.modal-content{border-radius:24px;border:none;overflow:hidden;box-shadow:0 50px 120px rgba(15,23,42,.4)}
+.modal-header{
+  background:linear-gradient(135deg,#1e1b4b 0%,#4c1d95 50%,#831843 100%);
+  color:#fff;border:none;padding:1.5rem 1.75rem;
+}
+.modal-title{
+  font-weight:800;font-size:1.15rem;
+  display:flex;align-items:center;gap:.65rem;
+}
+.modal-header .btn-close{filter:brightness(0) invert(1);opacity:.85}
+.modal-body{padding:1.75rem}
+.modal-footer{border:none;padding:1rem 1.75rem 1.75rem;gap:.65rem}
+
+.struk{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--ink)}
+.struk-head{text-align:center;padding-bottom:1rem;border-bottom:2px dashed #cbd5e1}
+.struk-head .em{font-size:2.4rem;margin-bottom:.5rem;display:block;animation:wave 3s ease-in-out infinite}
+.struk-head h5{font-weight:900;margin-bottom:.3rem;letter-spacing:4px;font-size:1rem}
+.struk-head small{color:var(--muted);font-size:.7rem;letter-spacing:1.5px}
+.struk hr{border-top:1px dashed #cbd5e1;margin:.9rem 0;opacity:1}
+.struk-row{display:flex;justify-content:space-between;padding:.25rem 0;font-size:.82rem}
+.struk-total{display:flex;justify-content:space-between;font-size:1.05rem;font-weight:900;padding:.55rem 0}
+.struk-foot{
+  text-align:center;font-size:.78rem;color:var(--muted);
+  margin-top:1rem;padding-top:.9rem;border-top:2px dashed #cbd5e1;line-height:1.7;
+}
+
+.toast-wrap{position:fixed;bottom:1.25rem;right:1.25rem;z-index:10000;display:flex;flex-direction:column;gap:.6rem}
+.toast-msg{
+  background:var(--grad-green);color:#fff;
+  padding:1rem 1.4rem;border-radius:16px;
+  font-weight:800;font-size:.9rem;
+  box-shadow:0 20px 50px rgba(15,23,42,.25);
+  animation:fadeUp .3s cubic-bezier(.16,1,.3,1);
+  display:flex;align-items:center;gap:.65rem;min-width:220px;
+}
+.toast-msg.danger{background:var(--grad-pink)}
+.toast-msg.warning{background:var(--grad-orange)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:linear-gradient(135deg,#c4b5fd,#f9a8d4);border-radius:8px}
+
+.mob-btn{
+  display:none;width:46px;height:46px;border-radius:14px;
+  border:1.5px solid var(--line);background:#fff;
+  align-items:center;justify-content:center;cursor:pointer;
+  color:var(--violet);font-size:1.4rem;font-weight:800;
+  transition:all .3s;box-shadow:0 4px 15px rgba(0,0,0,.06);
+}
+.mob-btn:active{transform:scale(.95);background:#f5f3ff}
+.drawer-ov{
+  position:fixed;inset:0;background:rgba(15,23,42,.5);
+  backdrop-filter:blur(4px);z-index:9998;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.drawer-ov.open{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:-340px;width:320px;max-width:85vw;height:100vh;
+  background:#fff;box-shadow:-10px 0 50px rgba(0,0,0,.15);
+  z-index:9999;transition:right .4s cubic-bezier(.16,1,.3,1);
+  padding:1.75rem 1.5rem;overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.drawer.open{right:0}
+.drawer-top{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:1.25rem;border-bottom:1px solid var(--line);margin-bottom:1.5rem;
+}
+.drawer-top .tt{font-weight:900;font-size:1.15rem;display:flex;align-items:center;gap:.55rem}
+.drawer-close{
+  width:38px;height:38px;border-radius:12px;border:none;
+  background:#f1f5f9;color:var(--muted);cursor:pointer;
+  font-size:1.2rem;font-weight:800;transition:.2s;
+}
+.drawer-user{
+  display:flex;align-items:center;gap:.85rem;
+  padding:1.1rem;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(236,72,153,.08));
+  border:1px solid rgba(124,58,237,.15);border-radius:18px;margin-bottom:1.5rem;
+}
+.drawer-user .av{
+  width:50px;height:50px;border-radius:50%;
+  background:var(--grad-brand);color:#fff;
+  font-weight:900;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 25px rgba(124,58,237,.4);
+}
+.drawer-user .nm{font-weight:800;font-size:.95rem;color:var(--ink);margin-bottom:.15rem}
+.drawer-user .rl{font-size:.7rem;color:var(--muted);font-weight:800;text-transform:uppercase}
+.drawer-menu{display:flex;flex-direction:column;gap:.4rem;list-style:none;padding:0;margin:0 0 1.5rem;flex:1}
+.drawer-menu a{
+  display:flex;align-items:center;gap:.9rem;
+  padding:1rem 1.1rem;border-radius:16px;
+  color:var(--muted);font-weight:800;font-size:.92rem;
+  text-decoration:none;cursor:pointer;transition:.25s;
+  border:1.5px solid transparent;
+}
+.drawer-menu a .ic{
+  width:42px;height:42px;border-radius:12px;
+  background:#f1f5f9;display:flex;align-items:center;justify-content:center;
+  font-size:1.25rem;transition:.25s;flex-shrink:0;
+}
+.drawer-menu a:hover,.drawer-menu a.active{
+  background:var(--grad-brand);color:#fff;transform:translateX(4px);
+}
+.drawer-menu a:hover .ic,.drawer-menu a.active .ic{background:rgba(255,255,255,.25)}
+.drawer-logout{
+  width:100%;padding:1rem;border-radius:16px;
+  border:1.5px solid #fecaca;background:linear-gradient(135deg,#fef2f2,#fee2e2);
+  color:#dc2626;font-weight:900;font-size:.92rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:.55rem;transition:.25s;
+}
+
+@media(max-width:991px){
+  .nav-tabs-pill,.user-chip,.btn-icon{display:none!important}
+  .mob-btn{display:flex}
+  .logo-text{font-size:1.05rem}
+  .logo-cube{width:38px;height:38px;font-size:1.25rem}
+}
+@media(max-width:768px){
+  .main{padding:1.5rem 1rem 4rem}
+  .page-title{font-size:1.35rem;gap:.65rem}
+  .title-ic{width:44px;height:44px;font-size:1.25rem}
+  .stat-grid{grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem}
+  .stat-card{padding:1.3rem 1.15rem;min-height:140px;border-radius:18px}
+  .stat-ico{width:46px;height:46px;font-size:1.3rem;margin-bottom:.9rem;border-radius:14px}
+  .stat-val{font-size:1.6rem}
+  .stat-val.sm{font-size:1rem}
+  .card-body{padding:1.25rem}
+  .wgrid{grid-template-columns:repeat(2,1fr);gap:.75rem}
+  .witem{padding:1.1rem .75rem;border-radius:18px}
+  .witem .em{font-size:2.1rem}
+  .witem .nm{font-size:.85rem}
+  .witem .pr{font-size:.72rem;padding:.3rem .6rem}
+  .qris-wrap img{width:190px;height:190px}
+  .qris-amt{font-size:1.35rem}
+  .pay-tab{padding:.9rem .65rem;font-size:.82rem}
+  .pay-tab .em{font-size:1.5rem}
+  .trx-top{flex-direction:column;align-items:stretch;gap:.7rem}
+  .trx-total{text-align:left;display:flex;align-items:baseline;gap:.55rem}
+  .trx-total .val{font-size:1.2rem}
+}
+@media(max-width:420px){
+  .stat-grid{grid-template-columns:1fr;gap:.85rem}
+}
+</style>
 </head>
 <body>
 
-<!-- ================= LOGIN ================= -->
-<div id="loginPage" class="login-wrapper">
+<!-- ============ LOGIN ============ -->
+<div id="loginPage">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="login-scroll">
     <div class="login-card">
-        <div class="logo-container">
-            <div class="logo-icon">🎪</div>
+      <div class="logo-wrap"><div class="logo-face">🎪</div></div>
+      <h1>Kasir Wahana</h1>
+      <p class="tagline">Masuk untuk melanjutkan ke sistem</p>
+      <div id="loginError" class="err-alert hide">
+        <span>⚠️</span><span id="loginErrorMsg"></span>
+      </div>
+      <form id="formLogin">
+        <div class="field">
+          <input type="text" id="loginUsername" placeholder="Username" autocomplete="username">
+          <span class="ic">👤</span>
         </div>
-        <h3>Kasir Wahana Taman Budaya</h3>
-        <p class="subtitle">Masuk untuk melanjutkan ke sistem</p>
-
-        <div id="loginError" class="alert alert-danger py-2 d-none">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <span id="loginErrorMsg"></span>
+        <div class="field">
+          <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+          <span class="ic">🔒</span>
         </div>
-
-        <form id="formLogin" novalidate>
-            <div class="input-premium">
-                <input type="text" id="loginUsername" placeholder="Masukkan username" required autofocus />
-                <i class="bi bi-person-fill input-icon"></i>
-            </div>
-            <div class="input-premium">
-                <input type="password" id="loginPassword" placeholder="Masukkan password" required />
-                <i class="bi bi-shield-lock-fill input-icon"></i>
-            </div>
-            <button type="submit" class="btn-premium">
-                <i class="bi bi-box-arrow-in-right"></i> Login Sekarang
-            </button>
-        </form>
-
-        <div class="login-footer">
-            <strong>Demo Login</strong>
-            <code>admin / admin123</code>
-            <code>rina / rina123</code>
-        </div>
+        <button type="submit" class="btn-login">🔑 Login Sekarang</button>
+      </form>
+      <div class="demo-box">
+        <strong>Demo Login</strong>
+        <code>admin / admin123</code>
+        <code>rina / rina123</code>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- ================= APP ================= -->
-<div id="appPage" class="d-none">
+<!-- ============ APP ============ -->
+<div id="appPage" class="hide">
 
-    <!-- NAVBAR -->
-    <nav class="navbar-app">
-        <div class="container-app" style="padding-top:0;padding-bottom:0;">
-            <div class="d-flex align-items-center justify-content-between gap-2">
-                <a class="brand-logo" href="#">
-                    <div class="brand-icon-wrapper"><div class="brand-icon">🎪</div></div>
-                    <span class="brand-text">Kasir Wahana</span>
-                </a>
-
-                <ul class="nav-pills-app my-lg-0">
-                    <li><a class="nav-link active" href="#" data-page="dashboard">📊 Dashboard</a></li>
-                    <li><a class="nav-link" href="#" data-page="kasir">🛒 Kasir</a></li>
-                    <li class="nav-wahana-link"><a class="nav-link" href="#" data-page="wahana">🎢 Wahana</a></li>
-                    <li><a class="nav-link" href="#" data-page="laporan">📈 Laporan</a></li>
-                </ul>
-
-                <div class="d-none d-lg-flex align-items-center gap-2">
-                    <div class="user-pill">
-                        <div class="avatar" id="userAvatar">?</div>
-                        <div class="info">
-                            <span class="name" id="userNama">-</span>
-                            <span class="role" id="userRole">-</span>
-                        </div>
-                    </div>
-                    <button id="btnLogout" class="btn-logout">🚪 Keluar</button>
-                </div>
-
-                <button class="mobile-menu-btn d-lg-none" id="mobileMenuBtn">☰</button>
-            </div>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="logo-grp" onclick="navigateTo('dashboard')">
+        <div class="logo-cube">🎪</div>
+        <span class="logo-text">Kasir Wahana</span>
+      </div>
+      <ul class="nav-tabs-pill" id="navMenu">
+        <li><a data-page="dashboard" class="active">📊 Dashboard</a></li>
+        <li><a data-page="kasir">🛒 Kasir</a></li>
+        <li class="nav-wahana-link"><a data-page="wahana">🎢 Wahana</a></li>
+        <li><a data-page="laporan">📈 Laporan</a></li>
+      </ul>
+      <div class="nav-user">
+        <div class="user-chip">
+          <div class="avatar" id="userAvatar">?</div>
+          <div class="user-meta">
+            <div class="nm" id="userNama">-</div>
+            <div class="rl" id="userRole">-</div>
+          </div>
         </div>
-    </nav>
+        <button class="btn-icon logout" id="btnLogout" title="Keluar">🚪</button>
+        <button class="mob-btn" id="mobBtn">☰</button>
+      </div>
+    </div>
+  </nav>
 
-    <!-- MOBILE DRAWER -->
-    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
-    <div class="mobile-drawer" id="mobileDrawer">
-        <div class="mobile-drawer-header">
-            <div class="title">🎪 Menu</div>
-            <button class="mobile-drawer-close" id="mobileDrawerClose">✕</button>
+  <div class="drawer-ov" id="drawerOv"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-top">
+      <div class="tt">🎪 Menu</div>
+      <button class="drawer-close" id="drawerClose">✕</button>
+    </div>
+    <div class="drawer-user">
+      <div class="av" id="drawerAv">?</div>
+      <div>
+        <div class="nm" id="drawerNm">-</div>
+        <div class="rl" id="drawerRl">-</div>
+      </div>
+    </div>
+    <ul class="drawer-menu">
+      <li><a data-page="dashboard" class="active"><span class="ic">📊</span> Dashboard</a></li>
+      <li><a data-page="kasir"><span class="ic">🛒</span> Kasir</a></li>
+      <li class="drawer-wahana"><a data-page="wahana"><span class="ic">🎢</span> Wahana</a></li>
+      <li><a data-page="laporan"><span class="ic">📈</span> Laporan</a></li>
+    </ul>
+    <button class="drawer-logout" id="drawerLogout">🚪 Keluar</button>
+  </div>
+
+  <div class="main">
+
+    <div id="page-dashboard" class="app-page">
+      <div class="page-head">
+        <h2 class="page-title"><span class="title-ic">📊</span> Dashboard</h2>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card c1">
+          <div><div class="stat-ico">🎢</div><div class="stat-lbl">Wahana Aktif</div></div>
+          <div class="stat-val" id="statWahana">0</div>
         </div>
-        <div class="mobile-drawer-user">
-            <div class="avatar" id="mobileAvatar">?</div>
-            <div class="info">
-                <div class="name" id="mobileUserNama">-</div>
-                <div class="role" id="mobileUserRole">-</div>
-            </div>
+        <div class="stat-card c2">
+          <div><div class="stat-ico">🧾</div><div class="stat-lbl">Total Transaksi</div></div>
+          <div class="stat-val" id="statTransaksi">0</div>
         </div>
-        <ul class="mobile-drawer-menu">
-            <li><a href="#" data-page="dashboard" class="mobile-nav-link active"><span class="menu-icon">📊</span> Dashboard</a></li>
-            <li><a href="#" data-page="kasir" class="mobile-nav-link"><span class="menu-icon">🛒</span> Kasir</a></li>
-            <li class="mobile-wahana-link"><a href="#" data-page="wahana" class="mobile-nav-link"><span class="menu-icon">🎢</span> Wahana</a></li>
-            <li><a href="#" data-page="laporan" class="mobile-nav-link"><span class="menu-icon">📈</span> Laporan</a></li>
-        </ul>
-        <button class="mobile-drawer-logout" id="mobileLogout">🚪 Keluar</button>
+        <div class="stat-card c3">
+          <div><div class="stat-ico">📅</div><div class="stat-lbl">Hari Ini</div></div>
+          <div class="stat-val" id="statHariIni">0</div>
+        </div>
+        <div class="stat-card c4">
+          <div><div class="stat-ico">💰</div><div class="stat-lbl">Total Pendapatan</div></div>
+          <div class="stat-val sm" id="statPendapatan">Rp 0</div>
+        </div>
+      </div>
     </div>
 
-    <!-- ============ PAGE CONTENT ============ -->
-    <div class="container-app">
-
-        <!-- ========== DASHBOARD ========== -->
-        <div id="page-dashboard" class="app-page">
-            <div class="page-header">
-                <h2 class="page-title"><span class="title-icon">📊</span> Dashboard</h2>
-            </div>
-
-            <div class="stat-grid">
-                <div class="stat-card c-1">
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);">🎢</div>
-                    <div class="stat-label">Wahana Aktif</div>
-                    <div class="stat-value" id="statWahana">0</div>
-                </div>
-                <div class="stat-card c-2">
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);">🧾</div>
-                    <div class="stat-label">Total Transaksi</div>
-                    <div class="stat-value" id="statTransaksi">0</div>
-                </div>
-                <div class="stat-card c-3">
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#f97316,#ec4899);">📅</div>
-                    <div class="stat-label">Hari Ini</div>
-                    <div class="stat-value" id="statHariIni">0</div>
-                </div>
-                <div class="stat-card c-4">
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#14b8a6);">💰</div>
-                    <div class="stat-label">Total Pendapatan</div>
-                    <div class="stat-value small" id="statPendapatan">Rp 0</div>
-                </div>
-            </div>
-
-            <div class="card-app">
-                <div class="card-header-app">
-                    <h5>⚡ Menu Cepat</h5>
-                </div>
-                <div class="card-body-app">
-                    <div class="quick-menu">
-                        <button class="quick-btn bg-1 btn-goto" data-page="kasir">
-                            <div style="font-size:2.4rem;">🛒</div>
-                            <div>
-                                <div>Mulai Transaksi</div>
-                                <div class="sub">Proses penjualan tiket</div>
-                            </div>
-                        </button>
-                        <button class="quick-btn bg-2 btn-goto" data-page="wahana">
-                            <div style="font-size:2.4rem;">🎢</div>
-                            <div>
-                                <div>Kelola Wahana</div>
-                                <div class="sub">Tambah, edit, hapus</div>
-                            </div>
-                        </button>
-                        <button class="quick-btn bg-3 btn-goto" data-page="laporan">
-                            <div style="font-size:2.4rem;">📊</div>
-                            <div>
-                                <div>Lihat Laporan</div>
-                                <div class="sub">Riwayat transaksi</div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <div id="page-kasir" class="app-page hide">
+      <div class="page-head">
+        <h2 class="page-title"><span class="title-ic">🛒</span> Kasir</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:1.5rem" class="kasir-grid">
+        <div class="card">
+          <div class="card-head">
+            <h5 class="card-title">🎢 Pilih Wahana</h5>
+            <span class="chip chip-green"><span class="chip-dot"></span><span id="badgeWahana">0 tersedia</span></span>
+          </div>
+          <div class="card-body">
+            <div class="wgrid" id="wahanaGrid"></div>
+          </div>
         </div>
-
-        <!-- ========== KASIR ========== -->
-        <div id="page-kasir" class="app-page d-none">
-            <div class="page-header">
-                <h2 class="page-title"><span class="title-icon">🛒</span> Kasir</h2>
+        <div class="card">
+          <div class="card-head">
+            <h5 class="card-title">🛒 Keranjang</h5>
+            <span class="chip chip-purple"><span id="badgeItem">0 item</span></span>
+          </div>
+          <div class="card-body">
+            <div id="cartList" style="max-height:280px;overflow-y:auto"></div>
+            <div class="summary">
+              <div class="row tt"><span>Total</span><span id="cartTotal">Rp 0</span></div>
+              <div class="row km" id="rowKembalian"><span>💵 Kembalian</span><span id="cartKembalian">Rp 0</span></div>
             </div>
-
-            <div class="row g-3">
-                <div class="col-lg-7">
-                    <div class="card-app">
-                        <div class="card-header-app">
-                            <h5>🎢 Pilih Wahana</h5>
-                            <span class="pill-badge" id="badgeJumlahWahana">0 tersedia</span>
-                        </div>
-                        <div class="card-body-app">
-                            <div class="wahana-grid" id="wahanaGrid"></div>
-                            <div id="emptyWahanaKasir" class="empty-state d-none">
-                                <div class="empty-icon">🎢</div>
-                                <h6>Belum Ada Wahana Aktif</h6>
-                                <p>Tambahkan wahana terlebih dahulu di menu Wahana</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-5">
-                    <div class="card-app">
-                        <div class="card-header-app">
-  <!-- Keranjang -->
-<div class="col-lg-5">
-    <div class="card-app">
-        <div class="card-header-app">
-            <h5>🛒 Keranjang</h5>
-            <span class="pill-badge" id="badgeJumlahItem">0 item</span>
+            <label class="lbl">Metode Pembayaran</label>
+            <div class="pay-tabs">
+              <button type="button" class="pay-tab active" data-method="cash"><span class="em">💵</span>Cash</button>
+              <button type="button" class="pay-tab" data-method="qris"><span class="em">📱</span>QRIS</button>
+            </div>
+            <div id="cashWrap">
+              <label class="lbl">Uang Bayar</label>
+              <input type="number" id="inputBayar" class="inp" placeholder="0" style="margin-bottom:1rem">
+            </div>
+            <div id="qrisWrap" class="hide">
+              <div class="qris-box">
+                <div class="qris-tag">📱 QRIS</div>
+                <div class="qris-wrap"><img id="qrisImage" src="" alt="QRIS"></div>
+                <div class="qris-amt" id="qrisAmount">Rp 0</div>
+                <div class="qris-info">Scan dengan e-wallet / mobile banking</div>
+                <div class="qris-note">⚡ Setelah dibayar, klik tombol di bawah</div>
+              </div>
+            </div>
+            <button id="btnSimpanTrx" class="btn btn-green" style="width:100%">✅ Simpan Transaksi</button>
+          </div>
         </div>
-        <div class="card-body-app">
-            <div id="cartList" style="max-height:280px;overflow-y:auto;"></div>
-
-            <div class="cart-summary">
-                <div class="row-line total">
-                    <span>Total</span>
-                    <span id="cartTotal">Rp 0</span>
-                </div>
-                <div class="row-line kembalian" id="rowKembalian">
-                    <span>💵 Kembalian</span>
-                    <span id="cartKembalian">Rp 0</span>
-                </div>
-            </div>
-
-            <!-- Pilih Metode Pembayaran -->
-            <label class="form-label-app">Metode Pembayaran</label>
-            <div class="payment-tabs">
-                <button type="button" class="payment-tab active" data-method="cash">
-                    <span class="tab-icon">💵</span>
-                    Cash
-                </button>
-                <button type="button" class="payment-tab" data-method="qris">
-                    <span class="tab-icon">📱</span>
-                    QRIS
-                </button>
-            </div>
-
-            <!-- Cash Input -->
-            <div id="cashInputWrapper">
-                <label class="form-label-app">Uang Bayar</label>
-                <input type="number" id="inputBayar" class="input-bayar" placeholder="0" min="0" />
-            </div>
-
-            <!-- QRIS Display -->
-            <div id="qrisWrapper" class="d-none">
-                <div class="qris-box">
-                    <div class="qris-logo">
-                        <span class="qris-mark">📱</span> QRIS
-                    </div>
-                    <div class="qris-qr-wrapper">
-                        <img id="qrisImage" src="" alt="QRIS Code" />
-                    </div>
-                    <div class="qris-amount" id="qrisAmount">Rp 0</div>
-                    <div class="qris-desc">Scan dengan aplikasi e-wallet / mobile banking</div>
-                    <div class="qris-instruction">
-                        ⚡ Setelah dibayar, klik tombol di bawah
-                    </div>
-                </div>
-            </div>
-
-            <button id="btnSimpanTransaksi" class="btn-grad btn-grad-success w-100">
-                ✅ Simpan Transaksi
-            </button>
-        </div>
+      </div>
     </div>
-</div>
-        <!-- ========== WAHANA ========== -->
-        <div id="page-wahana" class="app-page d-none">
-            <div class="page-header">
-                <h2 class="page-title"><span class="title-icon">🎢</span> Data Wahana</h2>
-                <button class="btn-add" id="btnTambahWahana">+ Tambah Wahana</button>
-            </div>
 
-            <div class="card-app">
-                <div class="wahana-toolbar">
-                    <div class="wahana-search">
-                        <input type="text" id="searchWahana" placeholder="Cari wahana..." />
-                        <i class="bi bi-search"></i>
-                    </div>
-                    <div class="wahana-stats-badge">
-                        <span id="jumlahWahanaText">0 Wahana</span>
-                    </div>
-                </div>
-                <div id="wahanaList" class="wahana-list"></div>
-                <div id="emptyWahana" class="empty-state d-none">
-                    <div class="empty-icon">🎢</div>
-                    <h6>Belum Ada Data Wahana</h6>
-                    <p>Klik "Tambah Wahana" untuk menambahkan data baru</p>
-                </div>
-            </div>
+    <div id="page-wahana" class="app-page hide">
+      <div class="page-head">
+        <h2 class="page-title"><span class="title-ic">🎢</span> Data Wahana</h2>
+        <button class="btn btn-brand" id="btnTambahWahana">➕ Tambah Wahana</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="wgrid" id="wahanaList"></div>
+          <div id="emptyWahana" class="empty hide">
+            <div class="ic">🎢</div>
+            <h6>Belum Ada Wahana</h6>
+            <p>Klik "Tambah Wahana" untuk memulai</p>
+          </div>
         </div>
-
-        <!-- ========== LAPORAN ========== -->
-        <div id="page-laporan" class="app-page d-none">
-            <div class="page-header">
-                <h2 class="page-title"><span class="title-icon">📈</span> Laporan Transaksi</h2>
-            </div>
-
-            <div class="laporan-filter">
-                <div class="laporan-filter-grid">
-                    <div class="filter-field">
-                        <label>Dari Tanggal</label>
-                        <input type="date" id="filterDari" />
-                    </div>
-                    <div class="filter-field">
-                        <label>Sampai Tanggal</label>
-                        <input type="date" id="filterSampai" />
-                    </div>
-                    <button class="btn-filter" id="btnFilter">🔍 Filter</button>
-                </div>
-            </div>
-
-            <div class="stat-grid">
-                <div class="stat-card c-2">
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);">🧾</div>
-                    <div class="stat-label">Jumlah Transaksi</div>
-                    <div class="stat-value" id="lapJumlah">0</div>
-                </div>
-                <div class="stat-card c-4">
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#14b8a6);">💰</div>
-                    <div class="stat-label">Total Pendapatan</div>
-                    <div class="stat-value small" id="lapPendapatan">Rp 0</div>
-                </div>
-            </div>
-
-            <div class="card-app">
-                <div class="card-header-app">
-                    <h5>📋 Riwayat Transaksi</h5>
-                    <span class="pill-badge" id="lapJumlahBadge">0 transaksi</span>
-                </div>
-                <div id="laporanList" class="laporan-list"></div>
-                <div id="emptyLaporan" class="empty-state d-none">
-                    <div class="empty-icon">📭</div>
-                    <h6>Tidak Ada Transaksi</h6>
-                    <p>Belum ada transaksi pada periode yang dipilih</p>
-                </div>
-            </div>
-        </div>
-
-    </div><!-- /container-app -->
-</div><!-- /appPage -->
-
-<!-- ================= MODAL WAHANA ================= -->
-<div class="modal fade" id="modalWahana" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="formWahana" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalWahanaTitle">➕ Tambah Wahana</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="wahanaId" />
-                    <div class="mb-3">
-                        <label class="form-label-app">Nama Wahana <span class="required">*</span></label>
-                        <input type="text" id="wahanaNama" class="form-input-app" required placeholder="Contoh: ATV" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-app">Harga (Rp) <span class="required">*</span></label>
-                        <input type="number" id="wahanaHarga" class="form-input-app" min="0" required placeholder="0" />
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label-app">Status <span class="required">*</span></label>
-                        <select id="wahanaStatus" class="form-select-app" required>
-                            <option value="aktif">✅ Aktif</option>
-                            <option value="nonaktif">⛔ Nonaktif</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn-grad" id="btnSimpanWahana">Simpan</button>
-                </div>
-            </form>
-        </div>
+      </div>
     </div>
+
+    <div id="page-laporan" class="app-page hide">
+      <div class="page-head">
+        <h2 class="page-title"><span class="title-ic">📈</span> Laporan Transaksi</h2>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.85rem;align-items:end">
+            <div>
+              <label class="lbl">Dari Tanggal</label>
+              <input type="date" id="filterDari" class="inp">
+            </div>
+            <div>
+              <label class="lbl">Sampai Tanggal</label>
+              <input type="date" id="filterSampai" class="inp">
+            </div>
+            <button class="btn btn-brand" id="btnFilter">🔍 Filter</button>
+          </div>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card c2">
+          <div><div class="stat-ico">🧾</div><div class="stat-lbl">Jumlah Transaksi</div></div>
+          <div class="stat-val" id="lapJumlah">0</div>
+        </div>
+        <div class="stat-card c4">
+          <div><div class="stat-ico">💰</div><div class="stat-lbl">Total Pendapatan</div></div>
+          <div class="stat-val sm" id="lapPendapatan">Rp 0</div>
+        </div>
+      </div>
+      <div id="laporanList"></div>
+      <div id="emptyLaporan" class="empty hide">
+        <div class="ic">📭</div>
+        <h6>Tidak Ada Transaksi</h6>
+        <p>Belum ada transaksi pada periode ini</p>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- ================= MODAL HAPUS ================= -->
-<div class="modal fade" id="modalHapus" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-body text-center py-4">
-                <div style="width:80px;height:80px;margin:0 auto 1rem;border-radius:50%;background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(236,72,153,0.15));display:flex;align-items:center;justify-content:center;">
-                    <i class="bi bi-exclamation-triangle-fill" style="color:#ef4444;font-size:2.2rem;"></i>
-                </div>
-                <h6 class="fw-bold mb-2">Konfirmasi Hapus</h6>
-                <p class="text-muted mb-0" id="hapusPesan">Yakin ingin menghapus data ini?</p>
-            </div>
-            <div class="modal-footer justify-content-center pb-4">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger px-4" id="btnKonfirmasiHapus">🗑️ Hapus</button>
-            </div>
+<div class="modal fade" id="modalWahana" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="formWahana">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalWahanaTitle">➕ Tambah Wahana</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <div class="modal-body">
+          <input type="hidden" id="wahanaId">
+          <div style="margin-bottom:1rem">
+            <label class="lbl">Nama Wahana <span class="req">*</span></label>
+            <input type="text" id="wahanaNama" class="inp" placeholder="Contoh: ATV">
+          </div>
+          <div style="margin-bottom:1rem">
+            <label class="lbl">Harga (Rp) <span class="req">*</span></label>
+            <input type="number" id="wahanaHarga" class="inp" min="0" placeholder="0">
+          </div>
+          <div>
+            <label class="lbl">Status <span class="req">*</span></label>
+            <select id="wahanaStatus" class="inp">
+              <option value="aktif">✅ Aktif</option>
+              <option value="nonaktif">⛔ Nonaktif</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-brand" id="btnSimpanWahana">💾 Simpan</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
-<!-- ================= MODAL STRUK ================= -->
-<div class="modal fade" id="modalStruk" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">🧾 Struk Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="strukBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-                <button type="button" class="btn-grad" onclick="window.print()">🖨️ Cetak</button>
-            </div>
-        </div>
+<div class="modal fade" id="modalHapus" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-body" style="text-align:center;padding:2rem 1.5rem">
+        <div style="font-size:3.5rem;margin-bottom:.85rem;animation:bounce 2s infinite">⚠️</div>
+        <h6 style="font-weight:900;margin-bottom:.75rem">Konfirmasi Hapus</h6>
+        <p id="hapusPesan" style="color:var(--muted);font-size:.9rem;margin:0"></p>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger" id="btnKonfirmasiHapus">🗑️ Hapus</button>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="liveToast" class="toast align-items-center text-white border-0" role="alert">
-        <div class="d-flex">
-            <div class="toast-body" id="toastMessage">Berhasil!</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
+<div class="modal fade" id="modalStruk" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🧾 Struk Pembayaran</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="strukBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-brand" onclick="window.print()">🖨️ Cetak</button>
+      </div>
     </div>
+  </div>
 </div>
+
+<div class="toast-wrap" id="toastWrap"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="main.js"></script>
+<script>
+// ============ DATABASE ============
+const DB = {
+  VERSION: "10",
+  get(k){ return JSON.parse(localStorage.getItem(k)||"[]"); },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); },
+  init(){
+    if(localStorage.getItem("db_ver")!==this.VERSION){
+      ["users","wahana","transaksi","detail_transaksi","nextId"].forEach(k=>localStorage.removeItem(k));
+      localStorage.setItem("db_ver", this.VERSION);
+    }
+    if(!localStorage.getItem("users")){
+      this.set("users", [
+        {id:1, nama:"Admin Wahana", username:"admin", password:"admin123", role:"admin"},
+        {id:2, nama:"Rina", username:"rina", password:"rina123", role:"kasir"}
+      ]);
+    }
+    if(!localStorage.getItem("wahana")){
+      this.set("wahana", [
+        {id:1, nama_wahana:"ATV", harga:55000, status:"aktif", emoji:"🏍️"},
+        {id:2, nama_wahana:"Kelinci", harga:35000, status:"aktif", emoji:"🐰"},
+        {id:3, nama_wahana:"Kuda", harga:50000, status:"aktif", emoji:"🐴"},
+        {id:4, nama_wahana:"Paintball", harga:160000, status:"aktif", emoji:"🎯"}
+      ]);
+    }
+    if(!localStorage.getItem("transaksi")) this.set("transaksi",[]);
+    if(!localStorage.getItem("detail_transaksi")) this.set("detail_transaksi",[]);
+    if(!localStorage.getItem("nextId")) this.set("nextId",{wahana:5,transaksi:1,detail:1});
+  },
+  nextId(k){ const n=this.get("nextId"); const id=n[k]++; this.set("nextId",n); return id; }
+};
+DB.init();
 
+let currentUser=null, cart={}, hapusTarget={type:null,id:null}, paymentMethod="cash";
+const $=(id)=>document.getElementById(id);
+const EMOJI={atv:"🏍️",kelinci:"🐰",kuda:"🐴",paintball:"🎯",perahu:"⛵",sepeda:"🚴",panah:"🏹",ayunan:"🎠",kolam:"🏊",mobil:"🚗",motor:"🏍️",kereta:"🚂",mewarnai:"🎨",outbound:"🎪"};
+function getEmoji(n){ n=(n||"").toLowerCase(); for(const k in EMOJI) if(n.includes(k)) return EMOJI[k]; return "🎪"; }
+function esc(t){ const d=document.createElement("div"); d.textContent=t==null?"":t; return d.innerHTML; }
+function rp(n){ return "Rp "+Number(n||0).toLocaleString("id-ID"); }
+function ini(n){ return (n||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
+function fmtTgl(iso){ if(!iso) return "-"; const d=new Date(iso); return d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})+" "+d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"}); }
+function genKode(){ const n=new Date(),p=x=>String(x).padStart(2,"0"); return `TRX-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}-${Math.floor(100+Math.random()*900)}`; }
+function isAdmin(){ return currentUser && currentUser.role==="admin"; }
+
+function toast(msg, type="success"){
+  const c=$("toastWrap");
+  const t=document.createElement("div");
+  t.className="toast-msg"+(type==="danger"?" danger":type==="warning"?" warning":"");
+  t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 2500);
+}
+
+// ============ LOGIN ============
+$("formLogin").addEventListener("submit", e=>{
+  e.preventDefault();
+  const u=$("loginUsername").value.trim(), p=$("loginPassword").value;
+  const err=$("loginError"), msg=$("loginErrorMsg");
+  err.classList.add("hide");
+  if(!u||!p){ msg.textContent="Username dan password wajib diisi!"; err.classList.remove("hide"); return; }
+  const user=DB.get("users").find(x=>x.username===u);
+  if(!user){ msg.textContent="Username tidak ditemukan!"; err.classList.remove("hide"); return; }
+  if(user.password!==p){ msg.textContent="Password salah!"; err.classList.remove("hide"); return; }
+  currentUser=user;
+  sessionStorage.setItem("kasirUser", JSON.stringify(user));
+  loginSuccess();
+});
+
+function loginSuccess(){
+  $("loginPage").classList.add("hide");
+  $("appPage").classList.remove("hide");
+  $("userNama").textContent=currentUser.nama;
+  $("userRole").textContent=currentUser.role;
+  $("userAvatar").textContent=ini(currentUser.nama);
+  $("drawerNm").textContent=currentUser.nama;
+  $("drawerRl").textContent=currentUser.role;
+  $("drawerAv").textContent=ini(currentUser.nama);
+  document.querySelectorAll(".nav-wahana-link, .drawer-wahana").forEach(el=>{
+    el.style.display = isAdmin() ? "" : "none";
+  });
+  navigateTo("dashboard");
+  refreshStats();
+}
+
+const saved=sessionStorage.getItem("kasirUser");
+if(saved){ try{ currentUser=JSON.parse(saved); loginSuccess(); } catch(e){ sessionStorage.removeItem("kasirUser"); } }
+
+$("btnLogout").addEventListener("click", ()=>{
+  if(!confirm("Yakin logout?")) return;
+  sessionStorage.removeItem("kasirUser"); currentUser=null; cart={};
+  $("appPage").classList.add("hide");
+  $("loginPage").classList.remove("hide");
+  $("formLogin").reset();
+  $("loginError").classList.add("hide");
+});
+
+function navigateTo(page){
+  if(page==="wahana" && !isAdmin()){ toast("⛔ Hanya Admin","danger"); page="dashboard"; }
+  document.querySelectorAll(".app-page").forEach(el=>el.classList.add("hide"));
+  const t=$("page-"+page); if(t) t.classList.remove("hide");
+  document.querySelectorAll(".nav-tabs-pill a, .drawer-menu a").forEach(a=>{
+    a.classList.toggle("active", a.dataset.page===page);
+  });
+  if(page==="kasir") renderKasir();
+  if(page==="wahana") renderWahanaList();
+  if(page==="laporan") muatLaporan();
+}
+
+document.querySelectorAll(".nav-tabs-pill a, .drawer-menu a").forEach(a=>{
+  a.addEventListener("click", ()=>{ if(a.dataset.page){ navigateTo(a.dataset.page); closeDrawer(); } });
+});
+
+function openDrawer(){ $("drawer").classList.add("open"); $("drawerOv").classList.add("open"); document.body.style.overflow="hidden"; }
+function closeDrawer(){ $("drawer").classList.remove("open"); $("drawerOv").classList.remove("open"); document.body.style.overflow=""; }
+$("mobBtn")?.addEventListener("click", openDrawer);
+$("drawerClose")?.addEventListener("click", closeDrawer);
+$("drawerOv")?.addEventListener("click", closeDrawer);
+$("drawerLogout")?.addEventListener("click", ()=>{ closeDrawer(); $("btnLogout").click(); });
+
+// ============ WAHANA ============
+function renderWahanaList(){
+  if(!isAdmin()) return;
+  let list=DB.get("wahana");
+  const c=$("wahanaList"), empty=$("emptyWahana");
+  c.innerHTML="";
+  if(list.length===0){ empty.classList.remove("hide"); return; }
+  empty.classList.add("hide");
+  list.forEach(w=>{
+    const el=document.createElement("div");
+    el.className="witem";
+    el.innerHTML=`
+      <span class="em">${w.emoji||getEmoji(w.nama_wahana)}</span>
+      <div class="nm">${esc(w.nama_wahana)}</div>
+      <div class="pr">${rp(w.harga)}</div>
+      <div class="stt" style="color:${w.status==='aktif'?'#047857':'#64748b'}">${w.status}</div>
+      <div class="acts">
+        <button class="edit" data-id="${w.id}">✏️</button>
+        <button class="del" data-id="${w.id}" data-nama="${esc(w.nama_wahana)}">🗑️</button>
+      </div>`;
+    c.appendChild(el);
+  });
+  c.querySelectorAll(".edit").forEach(b=>b.addEventListener("click",()=>bukaModalWahana(+b.dataset.id)));
+  c.querySelectorAll(".del").forEach(b=>b.addEventListener("click",()=>konfirmasiHapus("wahana",+b.dataset.id,b.dataset.nama)));
+}
+
+function bukaModalWahana(id=null){
+  if(!isAdmin()){ toast("⛔ Hanya Admin","danger"); return; }
+  $("formWahana").reset();
+  $("wahanaId").value="";
+  if(id){
+    $("modalWahanaTitle").textContent="✏️ Edit Wahana";
+    $("btnSimpanWahana").textContent="✅ Perbarui";
+    const w=DB.get("wahana").find(x=>x.id===id);
+    if(w){ $("wahanaId").value=w.id; $("wahanaNama").value=w.nama_wahana; $("wahanaHarga").value=w.harga; $("wahanaStatus").value=w.status; }
+  } else {
+    $("modalWahanaTitle").textContent="➕ Tambah Wahana";
+    $("btnSimpanWahana").textContent="💾 Simpan";
+  }
+  new bootstrap.Modal($("modalWahana")).show();
+}
+
+$("btnTambahWahana").addEventListener("click",()=>bukaModalWahana(null));
+
+$("formWahana").addEventListener("submit", e=>{
+  e.preventDefault();
+  if(!isAdmin()) return;
+  const id=$("wahanaId").value?+$("wahanaId").value:null;
+  const nama=$("wahanaNama").value.trim();
+  const harga=parseFloat($("wahanaHarga").value)||0;
+  if(!nama||harga<=0){ toast("⚠️ Field wajib diisi!","warning"); return; }
+  const data={nama_wahana:nama, harga, status:$("wahanaStatus").value, emoji:getEmoji(nama)};
+  const list=DB.get("wahana");
+  if(id){ const i=list.findIndex(x=>x.id===id); if(i>=0) list[i]={...list[i],...data}; toast("✅ Wahana diperbarui"); }
+  else { list.push({id:DB.nextId("wahana"),...data}); toast("✅ Wahana ditambahkan"); }
+  DB.set("wahana",list);
+  bootstrap.Modal.getInstance($("modalWahana")).hide();
+  renderWahanaList();
+  refreshStats();
+});
+
+function konfirmasiHapus(type,id,nama){
+  if(!isAdmin()){ toast("⛔ Hanya Admin","danger"); return; }
+  hapusTarget={type,id};
+  $("hapusPesan").innerHTML = type==="wahana"
+    ? `Yakin hapus wahana <strong>${esc(nama)}</strong>?`
+    : `Yakin hapus transaksi <strong>${esc(nama)}</strong>?`;
+  new bootstrap.Modal($("modalHapus")).show();
+}
+
+$("btnKonfirmasiHapus").addEventListener("click",()=>{
+  if(!hapusTarget.id) return;
+  if(!isAdmin()){ toast("⛔ Hanya Admin","danger"); return; }
+  if(hapusTarget.type==="wahana"){
+    if(DB.get("detail_transaksi").some(d=>d.wahana_id===hapusTarget.id)){ toast("⚠️ Wahana dipakai","warning"); return; }
+    DB.set("wahana", DB.get("wahana").filter(w=>w.id!==hapusTarget.id));
+    toast("🗑️ Wahana dihapus");
+    renderWahanaList();
+  } else {
+    DB.set("detail_transaksi", DB.get("detail_transaksi").filter(d=>d.transaksi_id!==hapusTarget.id));
+    DB.set("transaksi", DB.get("transaksi").filter(t=>t.id!==hapusTarget.id));
+    toast("🗑️ Transaksi dihapus");
+    muatLaporan();
+  }
+  refreshStats();
+  bootstrap.Modal.getInstance($("modalHapus")).hide();
+  hapusTarget={type:null,id:null};
+});
+
+// ============ KASIR ============
+function renderKasir(){
+  const list=DB.get("wahana").filter(w=>w.status==="aktif");
+  const g=$("wahanaGrid");
+  g.innerHTML="";
+  $("badgeWahana").textContent=list.length+" tersedia";
+  list.forEach(w=>{
+    const el=document.createElement("div");
+    el.className="witem";
+    el.innerHTML=`<span class="em">${w.emoji||getEmoji(w.nama_wahana)}</span><div class="nm">${esc(w.nama_wahana)}</div><div class="pr">${rp(w.harga)}</div>`;
+    el.addEventListener("click",()=>tambahItem(w.id,w.nama_wahana,w.harga));
+    g.appendChild(el);
+  });
+}
+
+function tambahItem(id,nama,harga){
+  if(cart[id]) cart[id].jumlah++;
+  else cart[id]={id,nama,harga,jumlah:1};
+  renderCart();
+}
+function kurangiItem(id){ if(!cart[id]) return; cart[id].jumlah--; if(cart[id].jumlah<=0) delete cart[id]; renderCart(); }
+function hapusItem(id){ delete cart[id]; renderCart(); }
+function totalCart(){ let t=0; Object.values(cart).forEach(it=>t+=it.harga*it.jumlah); return t; }
+
+function renderCart(){
+  const keys=Object.keys(cart);
+  $("badgeItem").textContent=keys.length+" item";
+  const list=$("cartList");
+  if(keys.length===0){
+    list.innerHTML=`<div class="cart-empty"><div class="ic">🛒</div><p>Keranjang Kosong</p><small>Klik wahana untuk menambah</small></div>`;
+    $("cartTotal").textContent="Rp 0";
+    $("cartKembalian").textContent="Rp 0";
+    if(paymentMethod==="qris") updateQRIS();
+    return;
+  }
+  let html="";
+  keys.forEach(k=>{
+    const it=cart[k];
+    html+=`
+      <div class="citem">
+        <div>
+          <div class="nm">${esc(it.nama)}</div>
+          <div class="dt">${rp(it.harga)} × ${it.jumlah}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="st">${rp(it.harga*it.jumlah)}</div>
+          <button class="qbtn" data-k="${k}" data-a="min">−</button>
+          <button class="qbtn" data-k="${k}" data-a="plus">+</button>
+          <button class="qbtn del" data-k="${k}" data-a="del">×</button>
+        </div>
+      </div>`;
+  });
+  list.innerHTML=html;
+  list.querySelectorAll(".qbtn").forEach(b=>{
+    const k=b.dataset.k, a=b.dataset.a;
+    b.addEventListener("click",()=>{
+      if(a==="min") kurangiItem(+k);
+      if(a==="plus"){ const it=cart[k]; tambahItem(it.id,it.nama,it.harga); }
+      if(a==="del") hapusItem(+k);
+    });
+  });
+  $("cartTotal").textContent=rp(totalCart());
+  if(paymentMethod==="qris") updateQRIS();
+  updateKembalian();
+}
+
+function updateKembalian(){
+  const bayar=parseFloat($("inputBayar").value)||0;
+  const kemb=bayar-totalCart();
+  $("cartKembalian").textContent=rp(kemb>=0?kemb:0);
+}
+$("inputBayar").addEventListener("input", updateKembalian);
+
+document.querySelectorAll(".pay-tab").forEach(tab=>{
+  tab.addEventListener("click",()=>setPayMethod(tab.dataset.method));
+});
+
+function setPayMethod(m){
+  paymentMethod=m;
+  document.querySelectorAll(".pay-tab").forEach(t=>t.classList.toggle("active",t.dataset.method===m));
+  if(m==="qris"){
+    $("cashWrap").classList.add("hide");
+    $("qrisWrap").classList.remove("hide");
+    $("rowKembalian").style.display="none";
+    updateQRIS();
+  } else {
+    $("cashWrap").classList.remove("hide");
+    $("qrisWrap").classList.add("hide");
+    $("rowKembalian").style.display="";
+  }
+}
+
+function updateQRIS(){
+  const total=totalCart();
+  if(total<=0){ $("qrisImage").src=""; $("qrisAmount").textContent="Rp 0"; return; }
+  const data=`QRIS-KASIR-WAHANA-${total}-${Date.now()}`;
+  $("qrisImage").src=`https://quickchart.io/qr?text=${encodeURIComponent(data)}&size=250&margin=2&ecLevel=M&dark=0f172a&light=ffffff`;
+  $("qrisAmount").textContent=rp(total);
+}
+
+$("btnSimpanTrx").addEventListener("click",()=>{
+  const keys=Object.keys(cart);
+  if(keys.length===0){ toast("⚠️ Keranjang kosong!","warning"); return; }
+  const total=totalCart();
+  let bayar, kembalian;
+  if(paymentMethod==="qris"){ bayar=total; kembalian=0; }
+  else {
+    bayar=parseFloat($("inputBayar").value)||0;
+    if(bayar<total){ toast("⚠️ Uang kurang!","danger"); return; }
+    kembalian=bayar-total;
+  }
+  const kode=genKode();
+  const trxId=DB.nextId("transaksi");
+  const trxList=DB.get("transaksi");
+  trxList.push({id:trxId,kode_transaksi:kode,user_id:currentUser.id,nama_kasir:currentUser.nama,metode:paymentMethod,tanggal:new Date().toISOString(),total,bayar,kembalian});
+  DB.set("transaksi",trxList);
+  const detailList=DB.get("detail_transaksi");
+  Object.values(cart).forEach(it=>{
+    detailList.push({id:DB.nextId("detail"),transaksi_id:trxId,wahana_id:it.id,nama_wahana:it.nama,jumlah:it.jumlah,harga:it.harga,subtotal:it.harga*it.jumlah});
+  });
+  DB.set("detail_transaksi",detailList);
+  tampilkanStruk({kode_transaksi:kode,nama_kasir:currentUser.nama,metode:paymentMethod,tanggal:new Date().toISOString(),total,bayar,kembalian,items:Object.values(cart)});
+  cart={}; $("inputBayar").value="";
+  renderCart();
+  toast("✅ Transaksi disimpan");
+  refreshStats();
+});
+
+function tampilkanStruk(t){
+  let items="";
+  t.items.forEach(it=>{
+    items+=`<div style="margin-bottom:.55rem"><strong>${esc(it.nama)}</strong><div class="struk-row"><span>${rp(it.harga)} × ${it.jumlah}</span><span>${rp(it.harga*it.jumlah)}</span></div></div>`;
+  });
+  $("strukBody").innerHTML=`
+    <div class="struk">
+      <div class="struk-head">
+        <span class="em">🎪</span>
+        <h5>KASIR WAHANA</h5>
+        <small>TIKET WAHANA REKREASI</small>
+      </div>
+      <div style="padding-top:.6rem">
+        <div class="struk-row"><span>Kode</span><strong>${esc(t.kode_transaksi)}</strong></div>
+        <div class="struk-row"><span>Tanggal</span><span>${fmtTgl(t.tanggal)}</span></div>
+        <div class="struk-row"><span>Kasir</span><span>${esc(t.nama_kasir)}</span></div>
+        <div class="struk-row"><span>Metode</span><strong>${t.metode==='qris'?'📱 QRIS':'💵 Cash'}</strong></div>
+      </div>
+      <hr>${items}<hr>
+      <div class="struk-total"><span>TOTAL</span><span>${rp(t.total)}</span></div>
+      <hr>
+      <div class="struk-row"><span>Bayar</span><span>${rp(t.bayar)}</span></div>
+      <div class="struk-row"><span>Kembalian</span><strong style="color:#059669">${rp(t.kembalian)}</strong></div>
+      <div class="struk-foot">Terima kasih telah berkunjung! 🎉<br>Selamat bermain!</div>
+    </div>`;
+  new bootstrap.Modal($("modalStruk")).show();
+}
+
+function muatLaporan(){
+  if(!$("filterDari").value){ const d=new Date(); d.setDate(1); $("filterDari").value=d.toISOString().split("T")[0]; }
+  if(!$("filterSampai").value) $("filterSampai").value=new Date().toISOString().split("T")[0];
+  const dari=new Date($("filterDari").value+"T00:00:00");
+  const sampai=new Date($("filterSampai").value+"T23:59:59");
+  const rows=DB.get("transaksi").filter(t=>{ const d=new Date(t.tanggal); return d>=dari&&d<=sampai; }).sort((a,b)=>new Date(b.tanggal)-new Date(a.tanggal));
+  const c=$("laporanList");
+  c.innerHTML="";
+  if(rows.length===0){ $("emptyLaporan").classList.remove("hide"); $("lapJumlah").textContent="0"; $("lapPendapatan").textContent="Rp 0"; return; }
+  $("emptyLaporan").classList.add("hide");
+  let total=0;
+  rows.forEach(r=>total+=r.total||0);
+  $("lapJumlah").textContent=rows.length;
+  $("lapPendapatan").textContent=rp(total);
+  const showDel=isAdmin();
+  rows.forEach((r,i)=>{
+    const card=document.createElement("div");
+    card.className="trx-card";
+    card.style.animationDelay=Math.min(i*0.04,0.3)+"s";
+    card.innerHTML=`
+      <div class="trx-top">
+        <div style="flex:1;min-width:0">
+          <div class="trx-code">${esc(r.kode_transaksi)}</div>
+          <div class="trx-date">🕐 ${fmtTgl(r.tanggal)}</div>
+        </div>
+        <div class="trx-total">
+          <div class="lbl">Total</div>
+          <div class="val">${rp(r.total)}</div>
+        </div>
+      </div>
+      <div class="trx-mid">
+        <div class="trx-av">${ini(r.nama_kasir)}</div>
+        <div class="trx-usr">
+          <div class="nm">${esc(r.nama_kasir||"-")}</div>
+          <div class="rl">Kasir</div>
+        </div>
+        <div class="badge-method ${r.metode==='qris'?'qris':''}">${r.metode==='qris'?'📱 QRIS':'💵 Cash'}</div>
+      </div>
+      <div class="trx-acts ${showDel?'':'one'}">
+        <button class="trx-btn trx-btn-view" data-id="${r.id}">👁️ Lihat Struk</button>
+        ${showDel?`<button class="trx-btn trx-btn-del" data-id="${r.id}" data-kode="${esc(r.kode_transaksi)}">🗑️ Hapus</button>`:''}
+      </div>`;
+    c.appendChild(card);
+  });
+  c.querySelectorAll(".trx-btn-view").forEach(b=>b.addEventListener("click",()=>lihatStrukLama(+b.dataset.id)));
+  if(showDel) c.querySelectorAll(".trx-btn-del").forEach(b=>b.addEventListener("click",()=>konfirmasiHapus("transaksi",+b.dataset.id,b.dataset.kode)));
+}
+
+function lihatStrukLama(id){
+  const trx=DB.get("transaksi").find(t=>t.id===id);
+  if(!trx) return;
+  const items=DB.get("detail_transaksi").filter(d=>d.transaksi_id===id).map(d=>({nama:d.nama_wahana,harga:d.harga,jumlah:d.jumlah}));
+  tampilkanStruk({...trx, items});
+}
+
+$("btnFilter").addEventListener("click", muatLaporan);
+
+function refreshStats(){
+  $("statWahana").textContent=DB.get("wahana").filter(w=>w.status==="aktif").length;
+  const trx=DB.get("transaksi");
+  const today=new Date().toDateString();
+  let total=0, hariIni=0;
+  trx.forEach(t=>{ total+=t.total||0; if(new Date(t.tanggal).toDateString()===today) hariIni++; });
+  $("statTransaksi").textContent=trx.length;
+  $("statHariIni").textContent=hariIni;
+  $("statPendapatan").textContent=rp(total);
+}
+
+console.log("🎪 Kasir Wahana siap!");
+</script>
 </body>
 </html>
