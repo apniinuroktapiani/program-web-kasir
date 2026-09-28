@@ -1,710 +1,799 @@
 // ============================================================
-// KASIR WAHANA — main.js (FINAL + QRIS + ROLE)
+// KASIR WAHANA — MAIN JS
 // ============================================================
 
-// ---------- DATABASE ----------
+// ---------- DATABASE (localStorage) ----------
 const DB = {
-    VERSION: "6",
-    get(key) { return JSON.parse(localStorage.getItem(key) || "[]"); },
-    set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
-    init() {
-        if (localStorage.getItem("db_version") !== this.VERSION) {
-            ["users","wahana","transaksi","detail_transaksi","nextId"].forEach(k => localStorage.removeItem(k));
-            localStorage.setItem("db_version", this.VERSION);
-        }
-        if (!localStorage.getItem("users") || this.get("users").length === 0) {
-            this.set("users", [
-                { id: 1, nama: "Admin Wahana", username: "admin", password: "admin123", role: "admin" },
-                { id: 2, nama: "Rina", username: "rina", password: "rina123", role: "kasir" }
-            ]);
-        }
-        if (!localStorage.getItem("wahana") || this.get("wahana").length === 0) {
-            this.set("wahana", [
-                { id: 1, nama_wahana: "ATV", harga: 55000, status: "aktif", emoji: "🏍️" },
-                { id: 2, nama_wahana: "Kelinci", harga: 35000, status: "aktif", emoji: "🐰" },
-                { id: 3, nama_wahana: "Kuda", harga: 50000, status: "aktif", emoji: "🐴" },
-                { id: 4, nama_wahana: "Paintball", harga: 160000, status: "aktif", emoji: "🎯" }
-            ]);
-        }
-        if (!localStorage.getItem("transaksi")) this.set("transaksi", []);
-        if (!localStorage.getItem("detail_transaksi")) this.set("detail_transaksi", []);
-        if (!localStorage.getItem("nextId")) this.set("nextId", { wahana: 5, transaksi: 1, detail: 1 });
-    },
-    nextId(key) {
-        const n = this.get("nextId");
-        const id = n[key]++;
-        this.set("nextId", n);
-        return id;
+  VERSION: "1",
+  get(k){ return JSON.parse(localStorage.getItem(k) || "[]"); },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); },
+  init(){
+    if(localStorage.getItem("db_ver") !== this.VERSION){
+      ["users","wahana","transaksi","detail_transaksi","nextId"].forEach(k => localStorage.removeItem(k));
+      localStorage.setItem("db_ver", this.VERSION);
     }
+    if(!localStorage.getItem("users")){
+      this.set("users", [
+        {id:1, nama:"Admin Wahana", username:"admin", password:"admin123", role:"admin"},
+        {id:2, nama:"Rina", username:"rina", password:"rina123", role:"kasir"}
+      ]);
+    }
+    if(!localStorage.getItem("wahana")){
+      this.set("wahana", [
+        {id:1, nama_wahana:"ATV", harga:50000, status:"aktif", emoji:"🏍️"},
+        {id:2, nama_wahana:"Kelinci", harga:10000, status:"aktif", emoji:"🐰"},
+        {id:3, nama_wahana:"Kuda", harga:25000, status:"aktif", emoji:"🐴"},
+        {id:4, nama_wahana:"Paintball", harga:75000, status:"aktif", emoji:"🎯"},
+        {id:5, nama_wahana:"Panahan", harga:30000, status:"aktif", emoji:"🏹"},
+        {id:6, nama_wahana:"Mobil Remote", harga:20000, status:"aktif", emoji:"🚗"},
+        {id:7, nama_wahana:"Shooting Shot", harga:40000, status:"aktif", emoji:"🎯"},
+        {id:8, nama_wahana:"Outbound", harga:100000, status:"aktif", emoji:"🎪"}
+      ]);
+    }
+    if(!localStorage.getItem("transaksi")) this.set("transaksi", []);
+    if(!localStorage.getItem("detail_transaksi")) this.set("detail_transaksi", []);
+    if(!localStorage.getItem("nextId")) this.set("nextId", {wahana:9, transaksi:1, detail:1});
+  },
+  nextId(k){
+    const n = this.get("nextId");
+    const id = n[k]++;
+    this.set("nextId", n);
+    return id;
+  }
 };
 DB.init();
-
-// ---------- EMOJI ----------
-const EMOJI_MAP = { atv:"🏍️", kelinci:"🐰", kuda:"🐴", paintball:"🎯", perahu:"⛵", sepeda:"🚴", panah:"🏹", ayunan:"🎠", kolam:"🏊", mobil:"🚗", motor:"🏍️", kereta:"🚂", mewarnai:"🎨", outbound:"🎪" };
-function getEmoji(nama) {
-    const n = (nama || "").toLowerCase();
-    for (const k in EMOJI_MAP) if (n.includes(k)) return EMOJI_MAP[k];
-    return "🎪";
-}
 
 // ---------- STATE ----------
 let currentUser = null;
 let cart = {};
-let hapusTarget = { type: null, id: null };
-let searchKeyword = "";
 let paymentMethod = "cash";
+let hapusTarget = { type: null, id: null };
+let strukTerakhir = null;
 
 // ---------- HELPERS ----------
 const $ = (id) => document.getElementById(id);
-function escapeHtml(t) { const d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; }
-function rupiah(n) { return "Rp " + Number(n || 0).toLocaleString("id-ID"); }
-function getInitials(nama) { return (nama || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(); }
-function formatTanggal(iso) {
-    if (!iso) return "-";
-    const d = new Date(iso);
-    return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-}
-function generateKode() {
-    const n = new Date();
-    const p = (x) => String(x).padStart(2, "0");
-    return `TRX-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}-${Math.floor(100 + Math.random() * 900)}`;
-}
-function showToast(msg, type = "success") {
-    const toastEl = $("liveToast"), toastMessage = $("toastMessage");
-    if (!toastEl || !toastMessage) return;
-    const bg = { success: "bg-success", danger: "bg-danger", warning: "bg-warning text-dark", info: "bg-info text-dark" };
-    toastEl.className = `toast align-items-center text-white border-0 ${bg[type] || "bg-primary"}`;
-    toastMessage.innerHTML = msg;
-    bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 2500 }).show();
-}
-function isAdmin() { return currentUser && currentUser.role === "admin"; }
 
-// ---------- QRIS GENERATOR ----------
-function generateQRIS(total) {
-    const data = `QRIS|KASIR WAHANA|INDONESIA|${total}|${Date.now()}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(data)}&color=0f172a&bgcolor=ffffff&margin=2`;
+function esc(t){
+  const d = document.createElement("div");
+  d.textContent = t == null ? "" : t;
+  return d.innerHTML;
+}
+function rp(n){ return "Rp " + Number(n||0).toLocaleString("id-ID"); }
+function ini(n){ return (n||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(); }
+function fmtTgl(iso){
+  if(!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}) +
+         " " + d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+}
+function genKode(){
+  const n = new Date(), p = x => String(x).padStart(2,"0");
+  return `TRX-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}${p(n.getHours())}${p(n.getMinutes())}${p(n.getSeconds())}-${Math.floor(100+Math.random()*900)}`;
+}
+function isAdmin(){ return currentUser && currentUser.role === "admin"; }
+
+function toast(msg, type = "success"){
+  const c = $("toastWrap");
+  const t = document.createElement("div");
+  t.className = "toast-msg" + (type === "danger" ? " danger" : type === "warning" ? " warning" : "");
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
 }
 
 // ============================================================
 // LOGIN
 // ============================================================
-function loginSuccess() {
-    $("loginPage").classList.add("d-none");
-    $("appPage").classList.remove("d-none");
-    $("userNama").textContent = currentUser.nama;
-    $("userRole").textContent = currentUser.role;
-    $("userAvatar").textContent = getInitials(currentUser.nama);
+function initLogin(){
+  const form = $("formLogin");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const err = $("loginError"), msg = $("loginErrorMsg");
+    err.classList.add("hide");
 
-    const mobAvatar = $("mobileAvatar"), mobNama = $("mobileUserNama"), mobRole = $("mobileUserRole");
-    if (mobAvatar) mobAvatar.textContent = getInitials(currentUser.nama);
-    if (mobNama) mobNama.textContent = currentUser.nama;
-    if (mobRole) mobRole.textContent = currentUser.role;
+    const u = $("loginUsername").value.trim();
+    const p = $("loginPassword").value;
 
-    const admin = isAdmin();
-    document.querySelectorAll(".nav-wahana-link, .mobile-wahana-link").forEach(el => {
-        el.style.display = admin ? "" : "none";
-    });
-
-    navigateTo("dashboard");
-    muatSemuaData();
-}
-
-function initLogin() {
-    const formLogin = $("formLogin"), loginError = $("loginError"), loginErrorMsg = $("loginErrorMsg");
-    if (!formLogin) return;
-
-    formLogin.addEventListener("submit", (e) => {
-        e.preventDefault();
-        loginError.classList.add("d-none");
-        const username = $("loginUsername").value.trim();
-        const password = $("loginPassword").value;
-
-        if (!username || !password) {
-            loginErrorMsg.textContent = "Username dan password wajib diisi!";
-            loginError.classList.remove("d-none");
-            return;
-        }
-        const user = DB.get("users").find(u => u.username === username);
-        if (!user) {
-            loginErrorMsg.textContent = "Username tidak ditemukan!";
-            loginError.classList.remove("d-none");
-            return;
-        }
-        if (user.password !== password) {
-            loginErrorMsg.textContent = "Password salah!";
-            loginError.classList.remove("d-none");
-            return;
-        }
-        currentUser = user;
-        sessionStorage.setItem("kasirUser", JSON.stringify(currentUser));
-        loginSuccess();
-        showToast(`✅ Selamat datang, ${escapeHtml(user.nama)}!`);
-    });
-
-    const savedUser = sessionStorage.getItem("kasirUser");
-    if (savedUser) {
-        try { currentUser = JSON.parse(savedUser); loginSuccess(); }
-        catch (e) { sessionStorage.removeItem("kasirUser"); }
+    if(!u || !p){
+      msg.textContent = "Username dan password wajib diisi!";
+      err.classList.remove("hide");
+      return;
     }
+    const user = DB.get("users").find(x => x.username === u);
+    if(!user){
+      msg.textContent = "Username tidak ditemukan!";
+      err.classList.remove("hide");
+      return;
+    }
+    if(user.password !== p){
+      msg.textContent = "Password salah!";
+      err.classList.remove("hide");
+      return;
+    }
+
+    currentUser = user;
+    sessionStorage.setItem("kasirUser", JSON.stringify(user));
+    loginSuccess();
+  });
+
+  // Auto login
+  const saved = sessionStorage.getItem("kasirUser");
+  if(saved){
+    try{
+      currentUser = JSON.parse(saved);
+      loginSuccess();
+    } catch(e){
+      sessionStorage.removeItem("kasirUser");
+    }
+  }
 }
 
-function initLogout() {
-    const btn = $("btnLogout");
-    if (!btn) return;
-    btn.addEventListener("click", () => {
-        if (!confirm("Yakin ingin logout?")) return;
-        sessionStorage.removeItem("kasirUser");
-        currentUser = null; cart = {};
-        $("appPage").classList.add("d-none");
-        $("loginPage").classList.remove("d-none");
-        $("formLogin").reset();
-        $("loginError").classList.add("d-none");
-        showToast("🚪 Anda telah logout.", "info");
-    });
+function loginSuccess(){
+  $("loginPage").classList.add("hide");
+  $("appPage").classList.remove("hide");
+  $("userNama").textContent = currentUser.nama;
+  $("userRole").textContent = currentUser.role;
+  $("userAvatar").textContent = ini(currentUser.nama);
+  $("drawerNama").textContent = currentUser.nama;
+  $("drawerRole").textContent = currentUser.role;
+  $("drawerAvatar").textContent = ini(currentUser.nama);
+
+  // Sembunyikan menu Wahana untuk kasir
+  const admin = isAdmin();
+  document.querySelectorAll(".nav-admin, .drawer-admin").forEach(el => {
+    el.style.display = admin ? "" : "none";
+  });
+
+  navigateTo("dashboard");
+  refreshStats();
+}
+
+function initLogout(){
+  $("btnLogout").addEventListener("click", doLogout);
+  $("drawerLogout").addEventListener("click", () => {
+    closeDrawer();
+    doLogout();
+  });
+}
+
+function doLogout(){
+  if(!confirm("Yakin ingin logout?")) return;
+  sessionStorage.removeItem("kasirUser");
+  currentUser = null;
+  cart = {};
+  $("appPage").classList.add("hide");
+  $("loginPage").classList.remove("hide");
+  $("formLogin").reset();
+  $("loginError").classList.add("hide");
 }
 
 // ============================================================
 // NAVIGASI
 // ============================================================
-function navigateTo(page) {
-    if (page === "wahana" && !isAdmin()) {
-        showToast("⛔ Hanya Admin yang dapat mengakses menu Wahana", "danger");
-        page = "dashboard";
+function navigateTo(page){
+  if(page === "wahana" && !isAdmin()){
+    toast("⛔ Hanya Admin", "danger");
+    page = "dashboard";
+  }
+  document.querySelectorAll(".page").forEach(el => el.classList.add("hide"));
+  const t = $("page-" + page);
+  if(t) t.classList.remove("hide");
+
+  document.querySelectorAll(".nav-menu a, .drawer-menu a").forEach(a => {
+    a.classList.toggle("active", a.dataset.page === page);
+  });
+
+  if(page === "kasir") renderKasir();
+  if(page === "wahana") renderWahanaList();
+  if(page === "laporan") muatLaporan();
+}
+
+function initNavigation(){
+  document.querySelectorAll(".nav-menu a, .drawer-menu a").forEach(a => {
+    a.addEventListener("click", () => {
+      if(a.dataset.page){
+        navigateTo(a.dataset.page);
+        closeDrawer();
+      }
+    });
+  });
+}
+
+// ============================================================
+// MOBILE DRAWER
+// ============================================================
+function openDrawer(){
+  $("drawer").classList.add("open");
+  $("drawerOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeDrawer(){
+  $("drawer").classList.remove("open");
+  $("drawerOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function initMobileDrawer(){
+  $("mobBtn").addEventListener("click", openDrawer);
+  $("drawerClose").addEventListener("click", closeDrawer);
+  $("drawerOverlay").addEventListener("click", closeDrawer);
+}
+
+// ============================================================
+// WAHANA — CRUD (Admin)
+// ============================================================
+function renderWahanaList(){
+  if(!isAdmin()) return;
+  const list = DB.get("wahana");
+  const c = $("wahanaList");
+  const empty = $("emptyWahana");
+  c.innerHTML = "";
+
+  if(list.length === 0){
+    empty.classList.remove("hide");
+    return;
+  }
+  empty.classList.add("hide");
+
+  list.forEach((w, i) => {
+    const el = document.createElement("div");
+    el.className = "wahana-card";
+    el.style.animationDelay = Math.min(i * 0.04, 0.4) + "s";
+    el.innerHTML = `
+      <div class="head">
+        <div class="em">${w.emoji || "🎪"}</div>
+        <div class="info">
+          <div class="nm">${esc(w.nama_wahana)}</div>
+          <div class="pr">${rp(w.harga)}</div>
+        </div>
+        <span class="badge badge-${w.status === 'aktif' ? 'green' : 'gray'}">${w.status}</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-blue btn-sm" data-action="edit" data-id="${w.id}">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" data-action="del" data-id="${w.id}" data-nama="${esc(w.nama_wahana)}">🗑️ Hapus</button>
+      </div>
+    `;
+    c.appendChild(el);
+  });
+
+  c.querySelectorAll("button[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = Number(btn.dataset.id);
+      if(btn.dataset.action === "edit") bukaModalWahana(id);
+      if(btn.dataset.action === "del") konfirmasiHapus("wahana", id, btn.dataset.nama);
+    });
+  });
+}
+
+function bukaModalWahana(id = null){
+  if(!isAdmin()) return;
+  const form = $("formWahana");
+  form.reset();
+  $("wahanaId").value = "";
+
+  if(id){
+    $("modalWahanaTitle").textContent = "✏️ Edit Wahana";
+    $("btnSimpanWahana").textContent = "✅ Perbarui";
+    const w = DB.get("wahana").find(x => x.id === id);
+    if(w){
+      $("wahanaId").value = w.id;
+      $("wahanaNama").value = w.nama_wahana;
+      $("wahanaHarga").value = w.harga;
+      $("wahanaStatus").value = w.status;
     }
-    document.querySelectorAll(".app-page").forEach(el => el.classList.add("d-none"));
-    const target = $("page-" + page);
-    if (target) target.classList.remove("d-none");
-    document.querySelectorAll(".nav-pills-app .nav-link").forEach(a => {
-        a.classList.toggle("active", a.dataset.page === page);
-    });
-    if (page === "laporan") muatLaporan();
-    if (page === "kasir") renderKasirGrid();
-    if (page === "wahana") renderWahana();
+  } else {
+    $("modalWahanaTitle").textContent = "➕ Tambah Wahana";
+    $("btnSimpanWahana").textContent = "💾 Simpan";
+  }
+  openModal("modalWahana");
 }
 
-function initNavigation() {
-    document.querySelectorAll(".nav-pills-app .nav-link").forEach(a => {
-        a.addEventListener("click", (e) => { e.preventDefault(); if (a.dataset.page) navigateTo(a.dataset.page); });
-    });
-    document.querySelectorAll(".btn-goto").forEach(btn => {
-        btn.addEventListener("click", () => navigateTo(btn.dataset.page));
-    });
-}
+function initWahana(){
+  $("btnTambahWahana").addEventListener("click", () => bukaModalWahana(null));
 
-// ============================================================
-// WAHANA
-// ============================================================
-function renderWahana() {
-    if (!isAdmin()) return;
-    let list = DB.get("wahana");
-    if (searchKeyword) list = list.filter(w => w.nama_wahana.toLowerCase().includes(searchKeyword.toLowerCase()));
+  $("formWahana").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if(!isAdmin()) return;
 
-    const container = $("wahanaList"), emptyWahana = $("emptyWahana"), jumlahWahanaText = $("jumlahWahanaText");
-    if (!container) return;
+    const id = $("wahanaId").value ? Number($("wahanaId").value) : null;
+    const nama = $("wahanaNama").value.trim();
+    const harga = parseFloat($("wahanaHarga").value) || 0;
 
-    const total = DB.get("wahana").length;
-    const aktif = DB.get("wahana").filter(w => w.status === "aktif").length;
-    if (jumlahWahanaText) jumlahWahanaText.textContent = `${total} Wahana · ${aktif} Aktif`;
+    if(!nama || harga <= 0){
+      toast("⚠️ Field wajib diisi!", "warning");
+      return;
+    }
 
-    container.innerHTML = "";
-    if (list.length === 0) { if (emptyWahana) emptyWahana.classList.remove("d-none"); return; }
-    if (emptyWahana) emptyWahana.classList.add("d-none");
+    const EMOJI_MAP = {
+      atv:"🏍️",kelinci:"🐰",kuda:"🐴",paintball:"🎯",panahan:"🏹",
+      mobil:"🚗",shooting:"🎯",outbound:"🎪",perahu:"⛵",sepeda:"🚴"
+    };
+    let emoji = "🎪";
+    const lower = nama.toLowerCase();
+    for(const k in EMOJI_MAP){
+      if(lower.includes(k)){ emoji = EMOJI_MAP[k]; break; }
+    }
 
-    list.forEach((w, i) => {
-        const card = document.createElement("div");
-        card.className = "wahana-card";
-        card.style.animationDelay = `${Math.min(i * 0.04, 0.3)}s`;
-        card.innerHTML = `
-            <div class="wahana-number">${i + 1}</div>
-            <div class="wahana-card-emoji">${w.emoji || getEmoji(w.nama_wahana)}</div>
-            <h5 class="wahana-card-name">${escapeHtml(w.nama_wahana)}</h5>
-            <div class="wahana-card-price">${rupiah(w.harga)}</div>
-            <div class="wahana-card-info">
-                <span class="wahana-card-status ${w.status}">${w.status === 'aktif' ? 'Aktif' : 'Nonaktif'}</span>
-            </div>
-            <div class="wahana-card-actions">
-                <button class="btn-edit-card" data-id="${w.id}">✏️ Edit</button>
-                <button class="btn-delete-card" data-id="${w.id}" data-nama="${escapeHtml(w.nama_wahana)}">🗑️ Hapus</button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+    const data = {
+      nama_wahana: nama,
+      harga: harga,
+      status: $("wahanaStatus").value,
+      emoji: emoji
+    };
 
-    container.querySelectorAll(".btn-edit-card").forEach(btn => {
-        btn.addEventListener("click", () => bukaModalWahana(Number(btn.dataset.id)));
-    });
-    container.querySelectorAll(".btn-delete-card").forEach(btn => {
-        btn.addEventListener("click", () => konfirmasiHapus("wahana", Number(btn.dataset.id), btn.dataset.nama));
-    });
-}
-
-function bukaModalWahana(id = null) {
-    if (!isAdmin()) { showToast("⛔ Hanya Admin yang dapat mengelola wahana", "danger"); return; }
-    const formWahana = $("formWahana");
-    formWahana.reset();
-    formWahana.classList.remove("was-validated");
-    $("wahanaId").value = "";
-    if (id) {
-        $("modalWahanaTitle").innerHTML = '✏️ Edit Wahana';
-        $("btnSimpanWahana").innerHTML = '✅ Perbarui';
-        const w = DB.get("wahana").find(x => x.id === id);
-        if (w) {
-            $("wahanaId").value = w.id;
-            $("wahanaNama").value = w.nama_wahana;
-            $("wahanaHarga").value = w.harga;
-            $("wahanaStatus").value = w.status;
-        }
+    const list = DB.get("wahana");
+    if(id){
+      const i = list.findIndex(x => x.id === id);
+      if(i >= 0) list[i] = { ...list[i], ...data };
+      toast("✅ Wahana diperbarui");
     } else {
-        $("modalWahanaTitle").innerHTML = '➕ Tambah Wahana';
-        $("btnSimpanWahana").innerHTML = '✅ Simpan';
+      list.push({ id: DB.nextId("wahana"), ...data });
+      toast("✅ Wahana ditambahkan");
     }
-    bootstrap.Modal.getOrCreateInstance($("modalWahana")).show();
-}
-
-function initWahana() {
-    const btnTambah = $("btnTambahWahana");
-    if (btnTambah) {
-        btnTambah.addEventListener("click", () => {
-            if (!isAdmin()) { showToast("⛔ Hanya Admin yang dapat menambah wahana", "danger"); return; }
-            bukaModalWahana(null);
-        });
-    }
-    const formWahana = $("formWahana");
-    if (!formWahana) return;
-    formWahana.addEventListener("submit", (e) => {
-        e.preventDefault();
-        if (!isAdmin()) { showToast("⛔ Hanya Admin yang dapat menyimpan wahana", "danger"); return; }
-        const id = $("wahanaId").value ? Number($("wahanaId").value) : null;
-        const nama = $("wahanaNama").value.trim();
-        const harga = parseFloat($("wahanaHarga").value) || 0;
-        if (!nama || harga <= 0) { showToast("Semua field wajib diisi dengan benar!", "warning"); return; }
-        const data = { nama_wahana: nama, harga, status: $("wahanaStatus").value, emoji: getEmoji(nama) };
-        const list = DB.get("wahana");
-        if (id) {
-            const idx = list.findIndex(x => x.id === id);
-            if (idx >= 0) list[idx] = { ...list[idx], ...data };
-            showToast('✅ Wahana diperbarui!');
-        } else {
-            list.push({ id: DB.nextId("wahana"), ...data });
-            showToast('✅ Wahana ditambahkan!');
-        }
-        DB.set("wahana", list);
-        bootstrap.Modal.getInstance($("modalWahana")).hide();
-        renderWahana();
-        updateStats();
-    });
-    document.addEventListener("input", (e) => {
-        if (e.target.id === "searchWahana") { searchKeyword = e.target.value.trim(); renderWahana(); }
-    });
+    DB.set("wahana", list);
+    closeModal("modalWahana");
+    renderWahanaList();
+    refreshStats();
+  });
 }
 
 // ============================================================
 // HAPUS
 // ============================================================
-function konfirmasiHapus(type, id, nama) {
-    if (!isAdmin()) { showToast("⛔ Hanya Admin yang dapat menghapus data", "danger"); return; }
-    hapusTarget = { type, id };
-    const hapusPesan = $("hapusPesan");
-    hapusPesan.innerHTML = type === "wahana"
-        ? `Yakin ingin menghapus wahana <strong>${escapeHtml(nama)}</strong>?`
-        : `Yakin ingin menghapus transaksi <strong>${escapeHtml(nama)}</strong>?`;
-    bootstrap.Modal.getOrCreateInstance($("modalHapus")).show();
+function konfirmasiHapus(type, id, nama){
+  if(!isAdmin()){
+    toast("⛔ Hanya Admin", "danger");
+    return;
+  }
+  hapusTarget = { type, id };
+  $("hapusPesan").innerHTML = type === "wahana"
+    ? `Yakin hapus wahana <strong>${esc(nama)}</strong>?`
+    : `Yakin hapus transaksi <strong>${esc(nama)}</strong>?`;
+  openModal("modalHapus");
 }
 
-function initKonfirmasiHapus() {
-    const btn = $("btnKonfirmasiHapus");
-    if (!btn) return;
-    btn.addEventListener("click", () => {
-        if (!hapusTarget.id) return;
-        if (!isAdmin()) {
-            showToast("⛔ Hanya Admin yang dapat menghapus data", "danger");
-            bootstrap.Modal.getInstance($("modalHapus")).hide();
-            hapusTarget = { type: null, id: null };
-            return;
-        }
-        if (hapusTarget.type === "wahana") {
-            if (DB.get("detail_transaksi").some(d => d.wahana_id === hapusTarget.id)) {
-                showToast("Wahana sudah dipakai di transaksi!", "danger");
-                bootstrap.Modal.getInstance($("modalHapus")).hide();
-                return;
-            }
-            DB.set("wahana", DB.get("wahana").filter(w => w.id !== hapusTarget.id));
-            showToast('🗑️ Wahana dihapus!');
-            renderWahana();
-            updateStats();
-        } else {
-            DB.set("detail_transaksi", DB.get("detail_transaksi").filter(d => d.transaksi_id !== hapusTarget.id));
-            DB.set("transaksi", DB.get("transaksi").filter(t => t.id !== hapusTarget.id));
-            showToast('🗑️ Transaksi dihapus!');
-            muatLaporan();
-            updateStats();
-        }
-        bootstrap.Modal.getInstance($("modalHapus")).hide();
-        hapusTarget = { type: null, id: null };
-    });
+function initKonfirmasiHapus(){
+  $("btnKonfirmasiHapus").addEventListener("click", () => {
+    if(!hapusTarget.id) return;
+    if(!isAdmin()){ toast("⛔ Hanya Admin", "danger"); return; }
+
+    if(hapusTarget.type === "wahana"){
+      const detail = DB.get("detail_transaksi");
+      if(detail.some(d => d.wahana_id === hapusTarget.id)){
+        toast("⚠️ Wahana dipakai di transaksi", "warning");
+        closeModal("modalHapus");
+        return;
+      }
+      DB.set("wahana", DB.get("wahana").filter(w => w.id !== hapusTarget.id));
+      toast("🗑️ Wahana dihapus");
+      renderWahanaList();
+      refreshStats();
+    } else {
+      DB.set("detail_transaksi", DB.get("detail_transaksi").filter(d => d.transaksi_id !== hapusTarget.id));
+      DB.set("transaksi", DB.get("transaksi").filter(t => t.id !== hapusTarget.id));
+      toast("🗑️ Transaksi dihapus");
+      muatLaporan();
+      refreshStats();
+    }
+    closeModal("modalHapus");
+    hapusTarget = { type: null, id: null };
+  });
 }
 
 // ============================================================
 // KASIR
 // ============================================================
-function renderKasirGrid() {
-    const list = DB.get("wahana").filter(w => w.status === "aktif");
-    const grid = $("wahanaGrid"), emptyKasir = $("emptyWahanaKasir"), badge = $("badgeJumlahWahana");
-    if (!grid) return;
-    grid.innerHTML = "";
-    if (badge) badge.textContent = `${list.length} tersedia`;
-    if (list.length === 0) { if (emptyKasir) emptyKasir.classList.remove("d-none"); return; }
-    if (emptyKasir) emptyKasir.classList.add("d-none");
-    list.forEach(w => {
-        const div = document.createElement("div");
-        div.className = "wahana-item";
-        div.innerHTML = `
-            <span class="wahana-emoji">${w.emoji || getEmoji(w.nama_wahana)}</span>
-            <div class="wahana-name">${escapeHtml(w.nama_wahana)}</div>
-            <div class="wahana-price">${rupiah(w.harga)}</div>
-        `;
-        div.addEventListener("click", () => tambahItem(w.id, w.nama_wahana, w.harga));
-        grid.appendChild(div);
-    });
-}
+function renderKasir(){
+  const list = DB.get("wahana").filter(w => w.status === "aktif");
+  const g = $("wahanaGrid");
+  const empty = $("emptyWahanaKasir");
+  g.innerHTML = "";
 
-function tambahItem(id, nama, harga) {
-    if (cart[id]) cart[id].jumlah++;
-    else cart[id] = { id, nama, harga, jumlah: 1 };
-    renderCart();
-}
-function kurangiItem(id) { if (!cart[id]) return; cart[id].jumlah--; if (cart[id].jumlah <= 0) delete cart[id]; renderCart(); }
-function hapusItem(id) { delete cart[id]; renderCart(); }
-function hitungTotalCart() { let t = 0; Object.values(cart).forEach(it => t += it.harga * it.jumlah); return t; }
+  if(list.length === 0){
+    empty.classList.remove("hide");
+    return;
+  }
+  empty.classList.add("hide");
 
-function renderCart() {
-    const keys = Object.keys(cart);
-    const cartList = $("cartList"), badgeItem = $("badgeJumlahItem");
-    if (!cartList) return;
-    if (badgeItem) badgeItem.textContent = `${keys.length} item`;
-
-    if (keys.length === 0) {
-        cartList.innerHTML = `
-            <div class="cart-empty">
-                <div class="empty-icon-cart">🛒</div>
-                <p>Keranjang masih kosong</p>
-                <small>Klik wahana untuk menambahkan</small>
-            </div>`;
-        $("cartTotal").textContent = "Rp 0";
-        $("cartKembalian").textContent = "Rp 0";
-        if (paymentMethod === "qris") updateQRISDisplay();
-        return;
-    }
-
-    let html = "";
-    keys.forEach(k => {
-        const it = cart[k];
-        const sub = it.harga * it.jumlah;
-        html += `
-            <div class="cart-item">
-                <div class="item-info">
-                    <div class="item-name">${escapeHtml(it.nama)}</div>
-                    <div class="item-detail">${rupiah(it.harga)} × ${it.jumlah}</div>
-                </div>
-                <div class="item-right">
-                    <div class="item-subtotal">${rupiah(sub)}</div>
-                    <div>
-                        <button class="qty-btn me-1 btn-kurang" data-id="${k}">−</button>
-                        <button class="qty-btn me-1 btn-tambah" data-id="${k}">+</button>
-                        <button class="qty-btn danger btn-hapus" data-id="${k}">×</button>
-                    </div>
-                </div>
-            </div>`;
-    });
-    cartList.innerHTML = html;
-
-    cartList.querySelectorAll(".btn-kurang").forEach(b => b.addEventListener("click", () => kurangiItem(Number(b.dataset.id))));
-    cartList.querySelectorAll(".btn-tambah").forEach(b => b.addEventListener("click", () => { const it = cart[b.dataset.id]; tambahItem(it.id, it.nama, it.harga); }));
-    cartList.querySelectorAll(".btn-hapus").forEach(b => b.addEventListener("click", () => hapusItem(Number(b.dataset.id))));
-
-    const total = hitungTotalCart();
-    $("cartTotal").textContent = rupiah(total);
-    if (paymentMethod === "qris") updateQRISDisplay();
-    hitungKembalian();
-}
-
-function hitungKembalian() {
-    const inputBayar = $("inputBayar"), cartKembalian = $("cartKembalian"), rowKembalian = $("rowKembalian");
-    if (!inputBayar || !cartKembalian) return;
-    if (paymentMethod === "qris") { if (rowKembalian) rowKembalian.style.display = "none"; return; }
-    if (rowKembalian) rowKembalian.style.display = "";
-    const bayar = parseFloat(inputBayar.value) || 0;
-    const kembali = bayar - hitungTotalCart();
-    cartKembalian.textContent = rupiah(kembali >= 0 ? kembali : 0);
-}
-
-function updateQRISDisplay() {
-    const qrisImage = $("qrisImage"), qrisAmount = $("qrisAmount");
-    if (!qrisImage || !qrisAmount) return;
-    const total = hitungTotalCart();
-    if (total <= 0) { qrisImage.src = ""; qrisAmount.textContent = "Rp 0"; return; }
-    qrisImage.src = generateQRIS(total);
-    qrisAmount.textContent = rupiah(total);
-}
-
-function setPaymentMethod(method) {
-    paymentMethod = method;
-    document.querySelectorAll(".payment-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.method === method));
-    const cashWrapper = $("cashInputWrapper"), qrisWrapper = $("qrisWrapper");
-    if (method === "qris") {
-        cashWrapper?.classList.add("d-none");
-        qrisWrapper?.classList.remove("d-none");
-        updateQRISDisplay();
-    } else {
-        cashWrapper?.classList.remove("d-none");
-        qrisWrapper?.classList.add("d-none");
-    }
-    hitungKembalian();
-}
-
-function tampilkanStruk(trx) {
-    const strukBody = $("strukBody");
-    if (!strukBody) return;
-    let itemHtml = "";
-    trx.items.forEach(it => {
-        itemHtml += `
-            <div class="item-block">
-                <div class="item-name">${escapeHtml(it.nama)}</div>
-                <div class="row-line">
-                    <span>${rupiah(it.harga)} × ${it.jumlah}</span>
-                    <span>${rupiah(it.harga * it.jumlah)}</span>
-                </div>
-            </div>`;
-    });
-    strukBody.innerHTML = `
-        <div class="struk-box">
-            <div class="struk-header">
-                <span class="emoji-logo">🎪</span>
-                <h5>KASIR WAHANA</h5>
-                <small>Tiket Wahana Rekreasi</small>
-            </div>
-            <div style="padding-top:.75rem;">
-                <div class="row-line"><span>Kode</span><strong>${escapeHtml(trx.kode_transaksi)}</strong></div>
-                <div class="row-line"><span>Tanggal</span><span>${formatTanggal(trx.tanggal)}</span></div>
-                <div class="row-line"><span>Kasir</span><span>${escapeHtml(trx.nama_kasir)}</span></div>
-                <div class="row-line"><span>Metode</span><strong>${trx.metode === 'qris' ? '📱 QRIS' : '💵 Cash'}</strong></div>
-            </div>
-            <hr>
-            ${itemHtml}
-            <hr>
-            <div class="row-line"><span>Subtotal</span><span>${rupiah(trx.total)}</span></div>
-            <div class="total-row"><span>TOTAL</span><span>${rupiah(trx.total)}</span></div>
-            <hr>
-            <div class="row-line"><span>Bayar</span><span>${rupiah(trx.bayar)}</span></div>
-            <div class="row-line"><span>Kembalian</span><strong style="color:#059669;">${rupiah(trx.kembalian)}</strong></div>
-            <div class="struk-footer">
-                <p style="margin:0;">Terima kasih telah berkunjung!</p>
-                <p style="margin:0;">Selamat bermain 🎉</p>
-            </div>
-        </div>
+  list.forEach((w, i) => {
+    const el = document.createElement("div");
+    el.className = "wahana-item";
+    el.style.animationDelay = Math.min(i * 0.04, 0.4) + "s";
+    el.innerHTML = `
+      <span class="em">${w.emoji || "🎪"}</span>
+      <div class="nm">${esc(w.nama_wahana)}</div>
+      <div class="pr">${rp(w.harga)}</div>
     `;
-    bootstrap.Modal.getOrCreateInstance($("modalStruk")).show();
+    el.addEventListener("click", () => tambahItem(w.id, w.nama_wahana, w.harga));
+    g.appendChild(el);
+  });
 }
 
-function initKasir() {
-    const inputBayar = $("inputBayar");
-    if (inputBayar) inputBayar.addEventListener("input", hitungKembalian);
+function tambahItem(id, nama, harga){
+  if(cart[id]) cart[id].jumlah++;
+  else cart[id] = { id, nama, harga, jumlah: 1 };
+  renderCart();
+}
+function kurangiItem(id){
+  if(!cart[id]) return;
+  cart[id].jumlah--;
+  if(cart[id].jumlah <= 0) delete cart[id];
+  renderCart();
+}
+function hapusItem(id){
+  delete cart[id];
+  renderCart();
+}
+function totalCart(){
+  let t = 0;
+  Object.values(cart).forEach(it => t += it.harga * it.jumlah);
+  return t;
+}
 
-    document.querySelectorAll(".payment-tab").forEach(tab => {
-        tab.addEventListener("click", () => setPaymentMethod(tab.dataset.method));
+function renderCart(){
+  const keys = Object.keys(cart);
+  const list = $("cartList");
+  $("cartCount").textContent = keys.length;
+
+  if(keys.length === 0){
+    list.innerHTML = `
+      <div class="empty" style="padding:2rem 1rem;">
+        <div class="ic">🛒</div>
+        <p>Keranjang masih kosong</p>
+      </div>`;
+    $("cartTotal").textContent = "Rp 0";
+    $("rowKembalian").style.display = "none";
+    if(paymentMethod === "qris") updateQRIS();
+    return;
+  }
+
+  let html = "";
+  keys.forEach(k => {
+    const it = cart[k];
+    const sub = it.harga * it.jumlah;
+    html += `
+      <div class="cart-item">
+        <div>
+          <div class="nm">${esc(it.nama)}</div>
+          <div class="dt">${rp(it.harga)} × ${it.jumlah} = <b style="color:#f59e0b;">${rp(sub)}</b></div>
+        </div>
+        <div style="display:flex;gap:.3rem;">
+          <button class="qty-btn" data-action="min" data-id="${k}">−</button>
+          <button class="qty-btn" data-action="plus" data-id="${k}">+</button>
+          <button class="qty-btn del" data-action="del" data-id="${k}">×</button>
+        </div>
+      </div>`;
+  });
+  list.innerHTML = html;
+
+  list.querySelectorAll(".qty-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      const id = b.dataset.id;
+      if(b.dataset.action === "min") kurangiItem(id);
+      if(b.dataset.action === "plus"){ const it = cart[id]; tambahItem(it.id, it.nama, it.harga); }
+      if(b.dataset.action === "del") hapusItem(id);
     });
+  });
 
-    const btnSimpan = $("btnSimpanTransaksi");
-    if (!btnSimpan) return;
+  $("cartTotal").textContent = rp(totalCart());
+  if(paymentMethod === "qris") updateQRIS();
+  hitungKembalian();
+}
 
-    btnSimpan.addEventListener("click", () => {
-        const keys = Object.keys(cart);
-        if (keys.length === 0) { showToast("Keranjang masih kosong!", "warning"); return; }
-        const total = hitungTotalCart();
-        let bayar, kembalian;
-        if (paymentMethod === "qris") {
-            bayar = total; kembalian = 0;
-        } else {
-            bayar = parseFloat($("inputBayar").value) || 0;
-            if (bayar < total) { showToast("Uang bayar kurang!", "danger"); return; }
-            kembalian = bayar - total;
-        }
-        const kode = generateKode();
-        const trxId = DB.nextId("transaksi");
-        const trxList = DB.get("transaksi");
-        trxList.push({ id: trxId, kode_transaksi: kode, user_id: currentUser.id, nama_kasir: currentUser.nama, metode: paymentMethod, tanggal: new Date().toISOString(), total, bayar, kembalian });
-        DB.set("transaksi", trxList);
+function hitungKembalian(){
+  const total = totalCart();
+  const bayar = parseFloat($("inputBayar").value) || 0;
+  const row = $("rowKembalian");
+  const box = $("cartKembalian");
 
-        const detailList = DB.get("detail_transaksi");
-        Object.values(cart).forEach(it => {
-            detailList.push({ id: DB.nextId("detail"), transaksi_id: trxId, wahana_id: it.id, nama_wahana: it.nama, jumlah: it.jumlah, harga: it.harga, subtotal: it.harga * it.jumlah });
-        });
-        DB.set("detail_transaksi", detailList);
+  if(paymentMethod !== "cash" || total <= 0 || bayar <= 0){
+    row.style.display = "none";
+    return;
+  }
+  row.style.display = "flex";
+  const kembali = bayar - total;
+  if(kembali >= 0){
+    box.style.color = "#059669";
+    box.textContent = rp(kembali);
+  } else {
+    box.style.color = "#dc2626";
+    box.textContent = "-" + rp(Math.abs(kembali));
+  }
+}
 
-        tampilkanStruk({ kode_transaksi: kode, nama_kasir: currentUser.nama, metode: paymentMethod, tanggal: new Date().toISOString(), total, bayar, kembalian, items: Object.values(cart) });
+function initKasir(){
+  $("inputBayar").addEventListener("input", hitungKembalian);
 
-        cart = {};
-        $("inputBayar").value = "";
-        renderCart();
-        showToast('✅ Transaksi disimpan!');
-        updateStats();
+  document.querySelectorAll(".pay-tab").forEach(tab => {
+    tab.addEventListener("click", () => setPayMethod(tab.dataset.method));
+  });
+
+  $("btnSimpanTrx").addEventListener("click", simpanTransaksi);
+}
+
+function setPayMethod(m){
+  paymentMethod = m;
+  document.querySelectorAll(".pay-tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.method === m);
+  });
+
+  if(m === "qris"){
+    $("cashWrap").classList.add("hide");
+    $("qrisWrap").classList.remove("hide");
+    updateQRIS();
+  } else {
+    $("cashWrap").classList.remove("hide");
+    $("qrisWrap").classList.add("hide");
+  }
+  hitungKembalian();
+}
+
+function updateQRIS(){
+  const total = totalCart();
+  const img = $("qrisImage");
+  const amt = $("qrisAmount");
+
+  if(total <= 0){
+    img.src = "";
+    amt.textContent = "Rp 0";
+    return;
+  }
+  const data = `QRIS-KASIR-WAHANA-${total}-${Date.now()}`;
+  img.src = `https://quickchart.io/qr?text=${encodeURIComponent(data)}&size=250&margin=2&ecLevel=M&dark=0f172a&light=ffffff`;
+  amt.textContent = rp(total);
+}
+
+function simpanTransaksi(){
+  const keys = Object.keys(cart);
+  if(keys.length === 0){
+    toast("⚠️ Keranjang kosong!", "warning");
+    return;
+  }
+
+  const total = totalCart();
+  let bayar, kembalian;
+
+  if(paymentMethod === "qris"){
+    bayar = total;
+    kembalian = 0;
+  } else {
+    bayar = parseFloat($("inputBayar").value) || 0;
+    if(bayar < total){
+      toast("⚠️ Uang bayar kurang!", "danger");
+      return;
+    }
+    kembalian = bayar - total;
+  }
+
+  const kode = genKode();
+  const trxId = DB.nextId("transaksi");
+
+  const trxList = DB.get("transaksi");
+  trxList.push({
+    id: trxId,
+    kode_transaksi: kode,
+    user_id: currentUser.id,
+    nama_kasir: currentUser.nama,
+    metode: paymentMethod,
+    tanggal: new Date().toISOString(),
+    total, bayar, kembalian
+  });
+  DB.set("transaksi", trxList);
+
+  const detailList = DB.get("detail_transaksi");
+  Object.values(cart).forEach(it => {
+    detailList.push({
+      id: DB.nextId("detail"),
+      transaksi_id: trxId,
+      wahana_id: it.id,
+      nama_wahana: it.nama,
+      jumlah: it.jumlah,
+      harga: it.harga,
+      subtotal: it.harga * it.jumlah
     });
+  });
+  DB.set("detail_transaksi", detailList);
 
-    setPaymentMethod("cash");
+  strukTerakhir = { kode_transaksi: kode, nama_kasir: currentUser.nama, metode: paymentMethod, tanggal: new Date().toISOString(), total, bayar, kembalian, items: Object.values(cart) };
+  tampilkanStruk(strukTerakhir);
+
+  cart = {};
+  $("inputBayar").value = "";
+  setPayMethod("cash");
+  renderCart();
+  toast("✅ Transaksi disimpan");
+  refreshStats();
+}
+
+// ============================================================
+// STRUK
+// ============================================================
+function tampilkanStruk(trx){
+  $("strukContent").textContent = buatTeksStruk(trx);
+  openModal("modalStruk");
+}
+
+function buatTeksStruk(t){
+  let items = "";
+  t.items.forEach(it => {
+    items += it.nama + "\n";
+    items += `  ${it.jumlah} x ${Number(it.harga).toLocaleString("id-ID")} = Rp${Number(it.harga*it.jumlah).toLocaleString("id-ID")}\n`;
+  });
+
+  let teks = "";
+  teks += "================================\n";
+  teks += "        KASIR WAHANA\n";
+  teks += "    Tiket Wahana Rekreasi\n";
+  teks += "================================\n";
+  teks += `Kode    : ${t.kode_transaksi}\n`;
+  teks += `Tanggal : ${fmtTgl(t.tanggal)}\n`;
+  teks += `Kasir   : ${t.nama_kasir}\n`;
+  teks += `Metode  : ${t.metode === "qris" ? "📱 QRIS" : "💵 Cash"}\n`;
+  teks += "================================\n";
+  teks += items;
+  teks += "================================\n";
+  teks += `TOTAL     : Rp${Number(t.total).toLocaleString("id-ID")}\n`;
+  teks += `Bayar     : Rp${Number(t.bayar).toLocaleString("id-ID")}\n`;
+  teks += `Kembalian : Rp${Number(t.kembalian).toLocaleString("id-ID")}\n`;
+  teks += "================================\n";
+  teks += "  Terima kasih 🙏\n";
+  teks += "    Selamat bermain!\n";
+  teks += "================================\n";
+  return teks;
+}
+
+function initStruk(){
+  $("btnCetak").addEventListener("click", () => {
+    if(!strukTerakhir) return;
+    const teks = buatTeksStruk(strukTerakhir);
+    const w = window.open("", "_blank", "width=400,height=600");
+    w.document.write(`<html><head><title>Struk</title><style>body{font-family:'Courier New',monospace;font-size:12px;padding:10px}pre{white-space:pre-wrap;margin:0}@media print{@page{margin:0}}</style></head><body><pre>${teks}</pre><script>window.onload=function(){window.print()}<\/script></body></html>`);
+    w.document.close();
+  });
+
+  $("btnWA").addEventListener("click", () => {
+    if(!strukTerakhir) return;
+    const teks = buatTeksStruk(strukTerakhir);
+    window.open("https://wa.me/?text=" + encodeURIComponent(teks));
+  });
 }
 
 // ============================================================
 // LAPORAN
 // ============================================================
-function muatLaporan() {
-    const filterDari = $("filterDari"), filterSampai = $("filterSampai");
-    const container = $("laporanList"), emptyLaporan = $("emptyLaporan");
-    const lapJumlah = $("lapJumlah"), lapPendapatan = $("lapPendapatan"), lapJumlahBadge = $("lapJumlahBadge");
-    if (!container) return;
+function muatLaporan(){
+  const f1 = $("filterDari"), f2 = $("filterSampai");
+  if(!f1.value){ const d = new Date(); d.setDate(1); f1.value = d.toISOString().split("T")[0]; }
+  if(!f2.value) f2.value = new Date().toISOString().split("T")[0];
 
-    if (!filterDari.value) { const d = new Date(); d.setDate(1); filterDari.value = d.toISOString().split("T")[0]; }
-    if (!filterSampai.value) filterSampai.value = new Date().toISOString().split("T")[0];
+  const dari = new Date(f1.value + "T00:00:00");
+  const sampai = new Date(f2.value + "T23:59:59");
 
-    const dari = new Date(filterDari.value + "T00:00:00");
-    const sampai = new Date(filterSampai.value + "T23:59:59");
-    const rows = DB.get("transaksi").filter(t => {
-        const tgl = new Date(t.tanggal);
-        return tgl >= dari && tgl <= sampai;
-    }).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+  const rows = DB.get("transaksi").filter(t => {
+    const d = new Date(t.tanggal);
+    return d >= dari && d <= sampai;
+  }).sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-    container.innerHTML = "";
-    if (rows.length === 0) {
-        if (emptyLaporan) emptyLaporan.classList.remove("d-none");
-        lapJumlah.textContent = "0";
-        lapPendapatan.textContent = "Rp 0";
-        if (lapJumlahBadge) lapJumlahBadge.textContent = "0 transaksi";
-        return;
-    }
-    if (emptyLaporan) emptyLaporan.classList.add("d-none");
+  const c = $("laporanList");
+  const empty = $("emptyLaporan");
+  c.innerHTML = "";
 
-    let totalPendapatan = 0;
-    rows.forEach(r => totalPendapatan += r.total || 0);
-    lapJumlah.textContent = rows.length;
-    lapPendapatan.textContent = rupiah(totalPendapatan);
-    if (lapJumlahBadge) lapJumlahBadge.textContent = `${rows.length} transaksi`;
+  if(rows.length === 0){
+    empty.classList.remove("hide");
+    $("lapJumlah").textContent = "0";
+    $("lapPendapatan").textContent = "Rp 0";
+    return;
+  }
+  empty.classList.add("hide");
 
-    const showDeleteBtn = isAdmin();
+  let total = 0;
+  rows.forEach(r => total += r.total || 0);
+  $("lapJumlah").textContent = rows.length;
+  $("lapPendapatan").textContent = rp(total);
 
-    rows.forEach((r, i) => {
-        const card = document.createElement("div");
-        card.className = "trx-card";
-        card.style.animationDelay = `${Math.min(i * 0.04, 0.3)}s`;
-        const isQRIS = r.metode === "qris";
-        card.innerHTML = `
-            <div class="trx-card-header">
-                <div class="kode-wrapper">
-                    <div class="trx-kode">${escapeHtml(r.kode_transaksi)}</div>
-                    <div class="trx-tanggal">🕐 ${formatTanggal(r.tanggal)}</div>
-                </div>
-                <div class="trx-total-wrapper">
-                    <div class="trx-total-label">Total</div>
-                    <div class="trx-total-value">${rupiah(r.total)}</div>
-                </div>
-            </div>
-            <div class="trx-card-body">
-                <div class="trx-kasir-avatar">${getInitials(r.nama_kasir)}</div>
-                <div class="trx-kasir-info">
-                    <div class="trx-kasir-name">${escapeHtml(r.nama_kasir || "-")}</div>
-                    <div class="trx-kasir-role">Kasir</div>
-                </div>
-                <div class="trx-badge" style="${isQRIS ? 'background:rgba(6,182,212,0.1);color:#0284c7;border-color:rgba(6,182,212,0.2);' : ''}">
-                    ${isQRIS ? '📱 QRIS' : '💵 Cash'}
-                </div>
-            </div>
-            <div class="trx-card-actions" style="${showDeleteBtn ? '' : 'grid-template-columns:1fr;'}">
-                <button class="trx-btn trx-btn-view" data-id="${r.id}">👁️ Lihat Struk</button>
-                ${showDeleteBtn ? `<button class="trx-btn trx-btn-delete" data-id="${r.id}" data-kode="${escapeHtml(r.kode_transaksi)}">🗑️ Hapus</button>` : ''}
-            </div>
-        `;
-        container.appendChild(card);
+  const showDel = isAdmin();
+
+  rows.forEach((r, i) => {
+    const card = document.createElement("div");
+    card.className = "trx-card";
+    card.style.animationDelay = Math.min(i * 0.04, 0.35) + "s";
+    card.innerHTML = `
+      <div class="trx-head">
+        <div style="flex:1;min-width:0">
+          <div class="trx-code">${esc(r.kode_transaksi)}</div>
+          <div class="trx-date">🕐 ${fmtTgl(r.tanggal)}</div>
+        </div>
+        <div class="trx-total">
+          <div class="lbl">Total</div>
+          <div class="val">${rp(r.total)}</div>
+        </div>
+      </div>
+      <div class="trx-body">
+        <div class="trx-av">${ini(r.nama_kasir)}</div>
+        <div class="trx-us">
+          <div class="nm">${esc(r.nama_kasir || "-")}</div>
+          <div class="rl">Kasir · ${r.metode === "qris" ? "📱 QRIS" : "💵 Cash"}</div>
+        </div>
+      </div>
+      <div class="trx-acts ${showDel ? '' : 'one'}">
+        <button class="btn btn-blue btn-sm" data-action="view" data-id="${r.id}">👁️ Struk</button>
+        ${showDel ? `<button class="btn btn-danger btn-sm" data-action="del" data-id="${r.id}" data-kode="${esc(r.kode_transaksi)}">🗑️ Hapus</button>` : ''}
+      </div>
+    `;
+    c.appendChild(card);
+  });
+
+  c.querySelectorAll("button[data-action]").forEach(b => {
+    b.addEventListener("click", () => {
+      const id = Number(b.dataset.id);
+      if(b.dataset.action === "view") lihatStrukLama(id);
+      if(b.dataset.action === "del") konfirmasiHapus("transaksi", id, b.dataset.kode);
     });
-
-    container.querySelectorAll(".trx-btn-view").forEach(btn => {
-        btn.addEventListener("click", () => lihatStrukLama(Number(btn.dataset.id)));
-    });
-    if (showDeleteBtn) {
-        container.querySelectorAll(".trx-btn-delete").forEach(btn => {
-            btn.addEventListener("click", () => konfirmasiHapus("transaksi", Number(btn.dataset.id), btn.dataset.kode));
-        });
-    }
+  });
 }
 
-function lihatStrukLama(trxId) {
-    const trx = DB.get("transaksi").find(t => t.id === trxId);
-    if (!trx) return;
-    const items = DB.get("detail_transaksi").filter(d => d.transaksi_id === trxId).map(d => ({ nama: d.nama_wahana, harga: d.harga, jumlah: d.jumlah }));
-    tampilkanStruk({ ...trx, items });
+function lihatStrukLama(id){
+  const trx = DB.get("transaksi").find(t => t.id === id);
+  if(!trx) return;
+  const items = DB.get("detail_transaksi")
+    .filter(d => d.transaksi_id === id)
+    .map(d => ({ nama: d.nama_wahana, harga: d.harga, jumlah: d.jumlah }));
+  strukTerakhir = { ...trx, items };
+  tampilkanStruk(strukTerakhir);
 }
 
-function initLaporan() {
-    const btnFilter = $("btnFilter");
-    if (btnFilter) btnFilter.addEventListener("click", muatLaporan);
+function initLaporan(){
+  $("btnFilter").addEventListener("click", muatLaporan);
 }
 
 // ============================================================
 // STATISTIK
 // ============================================================
-function updateStats() {
-    const statWahana = $("statWahana");
-    if (!statWahana) return;
-    statWahana.textContent = DB.get("wahana").filter(w => w.status === "aktif").length;
-    const trx = DB.get("transaksi");
-    const todayStr = new Date().toDateString();
-    let totalPendapatan = 0, hariIni = 0;
-    trx.forEach(t => {
-        totalPendapatan += t.total || 0;
-        if (new Date(t.tanggal).toDateString() === todayStr) hariIni++;
-    });
-    $("statTransaksi").textContent = trx.length;
-    $("statHariIni").textContent = hariIni;
-    $("statPendapatan").textContent = rupiah(totalPendapatan);
-}
+function refreshStats(){
+  $("statWahana").textContent = DB.get("wahana").filter(w => w.status === "aktif").length;
 
-function muatSemuaData() { renderWahana(); updateStats(); }
-
-// ============================================================
-// MOBILE DRAWER
-// ============================================================
-function initMobileDrawer() {
-    const menuBtn = $("mobileMenuBtn"), drawer = $("mobileDrawer"), overlay = $("mobileDrawerOverlay"), closeBtn = $("mobileDrawerClose");
-    if (!menuBtn || !drawer) return;
-    const openDrawer = () => { drawer.classList.add("open"); overlay?.classList.add("open"); document.body.style.overflow = "hidden"; };
-    const closeDrawer = () => { drawer.classList.remove("open"); overlay?.classList.remove("open"); document.body.style.overflow = ""; };
-    menuBtn.addEventListener("click", openDrawer);
-    closeBtn?.addEventListener("click", closeDrawer);
-    overlay?.addEventListener("click", closeDrawer);
-    document.querySelectorAll(".mobile-nav-link").forEach(link => {
-        link.addEventListener("click", (e) => {
-            e.preventDefault();
-            const page = link.dataset.page;
-            if (page) {
-                navigateTo(page);
-                closeDrawer();
-                document.querySelectorAll(".mobile-nav-link").forEach(l => l.classList.remove("active"));
-                link.classList.add("active");
-            }
-        });
-    });
-    $("mobileLogout")?.addEventListener("click", () => { closeDrawer(); $("btnLogout")?.click(); });
+  const trx = DB.get("transaksi");
+  const today = new Date().toDateString();
+  let total = 0, hariIni = 0;
+  trx.forEach(t => {
+    total += t.total || 0;
+    if(new Date(t.tanggal).toDateString() === today) hariIni++;
+  });
+  $("statTransaksi").textContent = trx.length;
+  $("statHariIni").textContent = hariIni;
+  $("statPendapatan").textContent = rp(total);
 }
 
 // ============================================================
-// INIT
+// MODAL HELPERS
+// ============================================================
+function openModal(id){ $(id).classList.add("active"); }
+function closeModal(id){ $(id).classList.remove("active"); }
+
+function initModals(){
+  document.querySelectorAll("[data-close]").forEach(btn => {
+    btn.addEventListener("click", () => closeModal(btn.dataset.close));
+  });
+  document.querySelectorAll(".modal").forEach(m => {
+    m.addEventListener("click", e => {
+      if(e.target === m) m.classList.remove("active");
+    });
+  });
+}
+
+// ============================================================
+// INIT ALL
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    initLogin();
-    initLogout();
-    initNavigation();
-    initWahana();
-    initKonfirmasiHapus();
-    initKasir();
-    initLaporan();
-    initMobileDrawer();
-    if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark-mode");
-    console.log("✅ Kasir Wahana + QRIS siap!");
+  initLogin();
+  initLogout();
+  initNavigation();
+  initMobileDrawer();
+  initWahana();
+  initKonfirmasiHapus();
+  initKasir();
+  initStruk();
+  initLaporan();
+  initModals();
+  console.log("🎪 Kasir Wahana siap!");
 });
